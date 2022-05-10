@@ -22,4 +22,4 @@ void   Renderer_Flip(void);
 /// <summary>
 /// 텍스트를 출력한다.
 /// </summary>
-void Renderer_DrawText(const char* text);
+void Renderer_DrawText(const char* text, int x, int y);

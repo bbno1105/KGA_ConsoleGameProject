@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "Renderer.h"
+#include <Windows.h>
 
 HANDLE s_consoleHandle;
 HANDLE s_screens[2];
@@ -69,11 +70,13 @@ void Renderer_Flip(void)
     clear(s_screens[s_backIndex]);
 }
 
-void Renderer_DrawText(const char* text, int32 numberOfChar)
+void Renderer_DrawText(const char* text, int32 numberOfChar, int x, int y)
 {
     // 1. 백 버퍼에 대한 핸들을 가져온다.
     HANDLE backBuffer = s_screens[s_backIndex];
 
+    COORD pos = { x, y }; // position
+    SetConsoleCursorPosition(backBuffer , pos);
     // 2. 백 버퍼에 텍스트를 출력한다.
     // WriteConsoleA는 printf 라고 생각하면 편함
     WriteConsoleA(backBuffer, text, numberOfChar, NULL, NULL);
