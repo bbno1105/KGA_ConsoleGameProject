@@ -175,6 +175,7 @@ typedef struct MainSceneData
 	Music		BGM;
 	float		Volume;
 	SoundEffect Effect;
+	Image		Front;
 	Image		BackGround;
 	float		Speed;
 	int32		X;
@@ -205,6 +206,7 @@ void init_main(void)
 	}
 	
 	Image_LoadImage(&data->BackGround, "background.jfif");
+	Image_LoadImage(&data->Front, "ฟ๋ป็.png");
 
 	Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	Audio_HookMusicFinished(logOnFinished);
@@ -329,6 +331,7 @@ void render_main(void)
 	}
 
 	Renderer_DrawImage(&data->BackGround, data->X, data->Y);
+	Renderer_DrawImage(&data->Front, data->X, data->Y);
 }
 
 void release_main(void)
