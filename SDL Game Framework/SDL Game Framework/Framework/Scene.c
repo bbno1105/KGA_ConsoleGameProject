@@ -336,7 +336,7 @@ void render_main(void)
 
 void release_main(void)
 {
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
+	MainSceneData* data = (MainSceneData*)g_Scene.Data; 
 
 	for (int32 i = 0; i < 10; ++i)
 	{
