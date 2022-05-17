@@ -128,7 +128,7 @@ typedef struct SoundEffect
 /// </summary>
 /// <param name="soundEffect">이펙트 객체</param>
 /// <param name="filename">파일 이름(.wav만 지원)</param>
-void Audio_LoadSoundEffect(SoundEffect* soundEffect, const char* filename);
+void Audio_LoadSoundEffect(SoundEffect* soundEffect, const wchar_t* filename);
 
 /// <summary>
 /// 이펙트 관련 자원을 정리한다. 반드시 Release()에 등록한다.

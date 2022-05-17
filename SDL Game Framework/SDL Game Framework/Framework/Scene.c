@@ -36,7 +36,7 @@ typedef struct TitleSceneData
 	Image	TestImage;
 } TitleSceneData;
 
-void init_title(void) 
+void init_title(void)
 {
 	g_Scene.Data = malloc(sizeof(TitleSceneData));
 	memset(g_Scene.Data, 0, sizeof(TitleSceneData));
@@ -48,7 +48,7 @@ void init_title(void)
 	}
 
 	data->FontSize = 24;
-	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetData(1)].String, 13);
+	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text[3], lstrlen(Data[GetCsvData(1)].Text[0]));
 
 	data->RenderMode = SOLID;
 
@@ -208,7 +208,7 @@ void init_main(void)
 
 	Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	Audio_HookMusicFinished(logOnFinished);
-	Audio_LoadSoundEffect(&data->Effect, "effect2.wav");
+	Audio_LoadSoundEffect(&data->Effect, "effect2.wav"); // Data[GetCsvData(1)].String
 	Audio_HookSoundEffectFinished(log2OnFinished);
 	Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
 
@@ -335,7 +335,7 @@ void release_main(void)
 {
 	MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < 10; ++i)
+	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
 	{
 		Text_FreeText(&data->GuideLine[i]);
 	}

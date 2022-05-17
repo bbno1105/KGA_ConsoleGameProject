@@ -129,7 +129,7 @@ void Audio_FreeMusic(Music* music)
 	music->Music = NULL;
 }
 
-void Audio_LoadSoundEffect(SoundEffect* soundEffect, const char* filename)
+void Audio_LoadSoundEffect(SoundEffect* soundEffect, const wchar_t* filename)
 {
 	LogInfo("Sound Effect Loading... %s", filename);
 

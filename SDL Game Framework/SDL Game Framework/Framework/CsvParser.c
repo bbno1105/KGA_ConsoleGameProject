@@ -48,7 +48,6 @@ wchar_t* ParseCsv(wchar_t* csvStr, wchar_t* saveStr)
 			{
 				*saveStr = *csvStr;
 				saveStr++; csvStr++;
-
 				csv = fgets(csv, 500, fp);
 				csvStr = ConvertCtoWC(csv);
 				continue;
@@ -85,7 +84,7 @@ wchar_t* ParseCsv(wchar_t* csvStr, wchar_t* saveStr)
 
 void CsvParse_Init(void)
 {
-	fp = fopen("test.csv", "rt");
+	fp = fopen("Data.csv", "rt");
 
 	setlocale(LC_ALL, "kr_KR.utf8");
 
@@ -102,7 +101,6 @@ void CsvParse_Init(void)
 
 		wchar_csv = ConvertCtoWC(csv);
 
-
 		while (*wchar_csv != NULL)
 		{
 			wchar_csv = ParseCsv(wchar_csv, save);
@@ -112,11 +110,139 @@ void CsvParse_Init(void)
 				// @@@@@@@@@ 형식에 맞게 여기를 수정해야함 @@@@@@@@@
 				switch (dataNum)
 				{
-				case 0:
-					Data[idNum].ID = atoi(save);
+					case 0:
+						Data[idNum].ID = atoi(save);
+						break;
+
+					case 1:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].ScenePage[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
 					break;
-				case 1:
-					wcscpy(Data[idNum].String, save);
+
+					case 2:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].Text[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
+					break;
+
+					case 3:
+						Data[idNum].Select1 = atoi(save);
+						break;
+
+					case 4:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].MovingPage1[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
+					break;
+
+					case 5:
+						Data[idNum].Select2 = atoi(save);
+						break;
+
+					case 6:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].MovingPage2[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
+					break;
+
+					case 7:
+						Data[idNum].Select3 = atoi(save);
+						break;
+
+					case 8:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].MovingPage3[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
+					break;
+
+					case 9:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].SoundFile[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
+					break;
+
+					case 10:
+					{
+						int stringNum = 0;	int i = 0;	int j = 0;
+						while (true)
+						{
+							if (save[i] == L'\n')
+							{
+								stringNum++; i++; j = 0;
+								continue;
+							}
+							if (save[i] == NULL) break;
+							Data[idNum].ImageFile[stringNum][j] = save[i];
+							i++; j++;
+						}
+					}
 					break;
 				}
 			}
@@ -131,7 +257,7 @@ void CsvParse_Init(void)
 }
 
 // 사용법 : Data[GetData(10)].String << ID가 10인 값의 String을 불러온다.
-int GetData(int ID)
+int GetCsvData(int ID)
 {
 	for (int i = 0; i < 100; i++)
 	{
@@ -142,3 +268,4 @@ int GetData(int ID)
 	}
 	return 0;
 }
+
