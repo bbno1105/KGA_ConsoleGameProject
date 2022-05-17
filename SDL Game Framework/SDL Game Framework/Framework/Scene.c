@@ -2,7 +2,6 @@
 #include "Scene.h"
 
 #include "Framework.h"
-#include "CsvParser.h"
 
 Scene g_Scene;
 
@@ -48,7 +47,8 @@ void init_title(void)
 	}
 
 	data->FontSize = 24;
-	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text[3], lstrlen(Data[GetCsvData(1)].Text[0]));
+	wchar_t* testtext = ParseToUnicode(csvFile.Items[44][Text_s]);
+	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, testtext, lstrlen(testtext));
 
 	data->RenderMode = SOLID;
 

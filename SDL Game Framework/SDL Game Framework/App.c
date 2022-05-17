@@ -38,7 +38,7 @@ bool App_Init(void)
 	}
 
 	Random_Init();
-	CsvParse_Init();
+	csv_Init();
 
 	if (false == Audio_Init())
 	{

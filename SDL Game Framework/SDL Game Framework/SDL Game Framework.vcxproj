@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="App.c" />
     <ClCompile Include="Framework\Audio.c" />
+    <ClCompile Include="Framework\csv.c" />
     <ClCompile Include="Framework\CsvParser.c" />
     <ClCompile Include="Framework\Image.c" />
     <ClCompile Include="Framework\Input.c" />
@@ -174,7 +175,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="Framework\Audio.h" />
-    <ClInclude Include="Framework\CsvParser.h" />
+    <ClInclude Include="Framework\csv.h" />
     <ClInclude Include="Framework\Image.h" />
     <ClInclude Include="Framework\Input.h" />
     <ClInclude Include="Framework\Random.h" />
