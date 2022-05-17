@@ -205,8 +205,7 @@ void init_main(void)
 		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
 	}
 	
-	Image_LoadImage(&data->BackGround, "background.jfif");
-	Image_LoadImage(&data->Front, "ฟ๋ป็.png");
+	Image_LoadImage(&data->Front, "main.png");
 
 	Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	Audio_HookMusicFinished(logOnFinished);
@@ -318,6 +317,11 @@ void update_main(void)
 		data->Alpha = Clamp(0, data->Alpha + 1, 255);
 		Image_SetAlphaValue(&data->BackGround, data->Alpha);
 	}
+
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_END);
+	}
 }
 
 void render_main(void)
@@ -330,15 +334,15 @@ void render_main(void)
 		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
 	}
 
+	Renderer_DrawImage(&data->Front, 0,0);
 	Renderer_DrawImage(&data->BackGround, data->X, data->Y);
-	Renderer_DrawImage(&data->Front, data->X, data->Y);
 }
 
 void release_main(void)
 {
 	MainSceneData* data = (MainSceneData*)g_Scene.Data; 
 
-	for (int32 i = 0; i < 10; ++i)
+	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
 	{
 		Text_FreeText(&data->GuideLine[i]);
 	}
@@ -347,6 +351,58 @@ void release_main(void)
 
 	SafeFree(g_Scene.Data);
 }
+#pragma endregion
+
+
+
+#pragma region ImageScene1
+
+
+typedef struct Scene1_Data
+{		
+	Image		Scene1_BackGround;
+	float		Speed;
+	int32		X;
+	int32		Y;
+	int32		Alpha;
+
+} Scene1_Data;
+
+void init_scene_1(void)
+{
+	g_Scene.Data = malloc(sizeof(Scene1_Data));
+	memset(g_Scene.Data, 0, sizeof(Scene1_Data));
+
+	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+
+	Image_LoadImage(&data->Scene1_BackGround, "Background.png");
+
+	data->Speed = 400.0f;
+	data->X = 0;
+	data->Y = 0;
+	data->Alpha = 100;
+}
+
+void update_scene_1(void)
+{
+	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+}
+
+void render_scene_1(void)
+{
+	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+
+	Image_SetAlphaValue(&data->Scene1_BackGround, data->Alpha);
+	Renderer_DrawImage(&data->Scene1_BackGround, 0, 0);
+}
+
+void release_scene_1(void)
+{
+	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+
+	SafeFree(g_Scene.Data);
+}
+
 #pragma endregion
 
 bool Scene_IsSetNextScene(void)
@@ -391,6 +447,12 @@ void Scene_Change(void)
 		g_Scene.Update = update_main;
 		g_Scene.Render = render_main;
 		g_Scene.Release = release_main;
+		break;
+	case SCENE_END:
+		g_Scene.Init = init_scene_1;
+		g_Scene.Update = update_scene_1;
+		g_Scene.Render = render_scene_1;
+		g_Scene.Release = release_scene_1;
 		break;
 	}
 
