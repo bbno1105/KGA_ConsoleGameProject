@@ -24,7 +24,7 @@ const wchar_t* str[] = {
 	L"C키를 누르면 렌더 모드가 바뀝니다. (Solid -> Shaded -> Blended)",
 	L"1키를 누르면 텍스트가 작아집니다.",
 	L"2키를 누르면 텍스트가 커집니다.",
-	L"스페이스 키를 누르면 다음 씬으로 넘어zxcvzxcv갑니다."
+	L"스페이스 키를 누르면 다음 씬으로 넘어갑니다."
 };
 
 typedef struct TitleSceneData
