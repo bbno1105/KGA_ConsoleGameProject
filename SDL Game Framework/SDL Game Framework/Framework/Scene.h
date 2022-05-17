@@ -14,9 +14,14 @@ typedef struct Scene
 typedef enum SceneType
 {
 	SCENE_NULL,
+	SCENE_START,
 	SCENE_TITLE,
 	SCENE_MAIN,
+<<<<<<< Updated upstream
 	SCENE_GAME,
+=======
+	SCENE_2,
+>>>>>>> Stashed changes
 	SCENE_MAX
 } ESceneType;
 

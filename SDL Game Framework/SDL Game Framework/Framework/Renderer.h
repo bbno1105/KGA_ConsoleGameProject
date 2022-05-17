@@ -33,6 +33,9 @@ void Renderer_DrawImage(const struct Image* image, int32 x, int32 y);
 /// <param name="color">글자의 색깔</param>
 void Renderer_DrawTextSolid(const struct Text* text, int32 x, int32 y, SDL_Color color);
 
+//텍스트를 출력한다. 타자기처럼 출력할 때 사용한다.
+void Renderer_DrawTextTyping(const struct Text* text, int32 x, int32 y, SDL_Color color);
+
 /// <summary>
 /// 텍스트를 출력한다. 배경색이 필요할 때 사용한다.
 /// </summary>

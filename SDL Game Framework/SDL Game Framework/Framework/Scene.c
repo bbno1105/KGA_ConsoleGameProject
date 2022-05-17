@@ -8,7 +8,7 @@ Scene g_Scene;
 
 static ESceneType s_nextScene = SCENE_NULL;
 
-#pragma region TitleScene
+#pragma region START
 
 #define SOLID 0
 #define SHADED 1
@@ -26,6 +26,55 @@ const wchar_t* str[] = {
 	L"2키를 누르면 텍스트가 커집니다.",
 	L"스페이스 키를 누르면 다음 씬으로 넘어갑니다."
 };
+
+} Start_Data;
+
+void init_start(void)
+{
+    g_Scene.Data = malloc(sizeof(Start_Data));
+    memset(g_Scene.Data, 0, sizeof(Start_Data));
+
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    Image_LoadImage(&data->Start_BackGround_Image, "main.png");
+
+    data->X;
+    data->Y;
+    data->Alpha;
+}
+
+void update_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    if (Input_GetKeyDown(VK_SPACE))
+    {
+        Scene_SetNextScene(SCENE_TITLE);
+    }
+}
+
+void render_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    data->Start_BackGround_Image.Width = 1920;
+    data->Start_BackGround_Image.Height = 1080;
+    Image_SetAlphaValue(&data->Start_BackGround_Image, 255);
+
+    Renderer_DrawImage(&data->Start_BackGround_Image, 0, 0);
+}
+
+void release_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    SafeFree(g_Scene.Data);
+}
+
+#pragma endregion
+
+#pragma region TitleScene
+
 
 typedef struct TitleSceneData
 {
@@ -495,7 +544,11 @@ void release_game(void)
 
 	SafeFree(g_Scene.Data);
 }
+<<<<<<< Updated upstream
 #pragma endregion
+=======
+
+>>>>>>> Stashed changes
 
 bool Scene_IsSetNextScene(void)
 {
