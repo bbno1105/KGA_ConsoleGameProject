@@ -131,19 +131,29 @@ void csv_Init(void)
 }
 
 
-void StringLine(wchar_t** string)
+bool isString = false;
+
+wchar_t* StringLine(wchar_t* string, wchar_t* stringl)
 {
-	bool isString = false;
+
 	while (true)
 	{
-	if (*string == NULL) break;
-	
-	if (*string == L'"') isString = true;
-	
-	if (*string == L'\n')
-	{
+		if (*string == L'"') isString = !isString;
+		if (isString && *string == L'"') string++; // 문자열 표시 넘어감
 
+		if (*string == L'\n')
+		{
+			*stringl = NULL;
+			string++;
+			break;
+		}
+		else if (*string == NULL)
+		{
+			*stringl = NULL;
+			break;
+		}
+		*stringl = *string;
+		stringl++;  string++;
 	}
-
-	}
+	return string;
 }

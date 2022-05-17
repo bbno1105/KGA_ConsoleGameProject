@@ -25,6 +25,7 @@ void csv_Init(void);
 int			ParseToInt(const CsvItem item);
 char*		ParseToAscii(const CsvItem item);
 wchar_t*	ParseToUnicode(const CsvItem item);
+wchar_t*	StringLine(wchar_t* string, wchar_t* stringl);
 
 enum column
 {

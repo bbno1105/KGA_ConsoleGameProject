@@ -28,7 +28,7 @@ const wchar_t* str[] = {
 
 typedef struct TitleSceneData
 {
-	Text	GuideLine[10];
+	Text	GuideLine[20];
 	Text	TestText;
 	int32	FontSize;
 	int32	RenderMode;
@@ -41,15 +41,20 @@ void init_title(void)
 	memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-	for (int32 i = 0; i < 10; ++i)
+
+	wchar_t* testtext = ParseToUnicode(csvFile.Items[44][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
+
+	for (int32 i = 0; i < 20; ++i)
 	{
-		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str[i], wcslen(str[i]));
+		wchar_t stringl[100] = L"";
+		testtext = StringLine(testtext, stringl); // ¿©±â¼­ ®c
+		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, stringl, wcslen(stringl));
+		if (*testtext == NULL) break;
 	}
 
 	data->FontSize = 24;
-	wchar_t* testtext = ParseToUnicode(csvFile.Items[44][Text_s]);
+	
 	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, testtext, lstrlen(testtext));
-
 	data->RenderMode = SOLID;
 
 	Image_LoadImage(&data->TestImage, "Background.jfif");
@@ -110,7 +115,7 @@ void update_title(void)
 void render_title(void)
 {
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-	for (int32 i = 0; i < 10; ++i)
+	for (int32 i = 0; i < 20; ++i)
 	{
 		SDL_Color color = { .a = 255 };
 		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
