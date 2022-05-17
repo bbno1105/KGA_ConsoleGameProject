@@ -70,7 +70,11 @@ void release_start(void)
 
 #pragma region TitleScene
 
-const wchar_t* str[] = {
+const wchar_t* str1[] = {
+   L"GAME START"
+};
+
+const wchar_t* str2[] = {
     L"▶ 선택지 1",
     L"▶ 선택지 2",
     L"▶ 선택지 3"
@@ -80,7 +84,7 @@ typedef struct TitleSceneData
 {
     Text    GuideLine[50][20]; //[id][줄바꿈]
     Text    GuideLineMovingPage[3][20]; //[선택지3개][선택지글자개수]
-    Text    ShadedSelect;
+    Text    ShadedSelect[3][20]; //[선택지3개][선택지글자개수]
     int32   FontSize;
     int32   RenderMode;
     int32   SelectNestScene;
@@ -94,12 +98,12 @@ typedef struct TitleSceneData
 
 void init_title(void)
 {
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
     
     // 이닛 타이틀 데이터가 들어갈 공간 만들기
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
-    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
     data->ID = 1;               // ID 1부터 시작
     data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
@@ -115,13 +119,13 @@ void init_title(void)
     // 선택지 3줄 이닛
     for (int32 i = 0; i < 3; ++i)
     {
-        Text_CreateText(&data->GuideLineMovingPage[i], "d2coding.ttf", 16, str[i], wcslen(str[i]));
+        Text_CreateText(&data->GuideLineMovingPage[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
     }
 
     // 셰이드 텍스트 이닛
     for (int32 i = 0; i < 3; ++i)
     {
-        Text_CreateText(&data->ShadedSelect, "d2coding.ttf", data->FontSize, str[i], wcslen(str[i]));
+        Text_CreateText(&data->ShadedSelect[i], "d2coding.ttf", data->FontSize, str2[i], wcslen(str2[i]));
     }
     Image_LoadImage(&data->BackGroundImage, "Scene1Background.png");
 
@@ -148,6 +152,7 @@ void update_title(void)
         elapsedTime = 0.0f;
     }
 
+    // 다음페이지 넘김
     if (Input_GetKeyDown(VK_SPACE))
     {
         data->ID++;         // ID 다음으로 넘어감
@@ -158,6 +163,8 @@ void update_title(void)
             Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
         }
     }
+
+    // 텍스트 스킵
     if (Input_GetKeyDown(VK_RIGHT))
     {
         data->TextLine = 20;
@@ -165,7 +172,7 @@ void update_title(void)
 
     // 선택한부분 음영넣기
     int SelectShadedIndex = 0;
-    data->ShadedSelect = str[SelectShadedIndex];
+    &data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
     if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
     {
         if (Input_GetKeyDown(VK_DOWN))
@@ -177,17 +184,6 @@ void update_title(void)
             SelectShadedIndex--;
         }
     }
-
-    //if (Input_GetKeyDown('C'))
-    //{
-    //    data->RenderMode = (data->RenderMode + 1) % 3;
-    //}
-
-    //if (Input_GetKey('1'))
-    //{
-    //    --data->FontSize;
-    //    Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
-    //}
 }
 
 void render_title(void)
@@ -275,11 +271,8 @@ void release_title(void)
 #pragma endregion
 
 #pragma region MainScene
-const wchar_t* str2[] = {
-   L"GAME START"
-};
-
 #define GUIDELINE_COUNT 8
+
 
 typedef struct MainSceneData
 {
