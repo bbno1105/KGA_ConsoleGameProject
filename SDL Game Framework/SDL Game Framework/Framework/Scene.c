@@ -69,44 +69,37 @@ void release_start(void)
 #pragma endregion
 
 #pragma region TitleScene
-
-
 typedef struct TitleSceneData
 {
     Text   GuideLine[50][20]; //[id][줄바꿈]
-    Text   TestText;
     int32   FontSize;
     int32   RenderMode;
     Image   BackGroundImage;
-    int32   TextLineCheck;
-    int32   TextIdCheck;
-    int32		X;
-    int32		Y;
-    int32		Alpha;
+    int32   TextLine;
+    int32   ID;
+    int32	X;
+    int32	Y;
+    int32	Alpha;
 } TitleSceneData;
 
 void init_title(void)
 {
+    // 이닛 타이틀 데이터가 들어갈 공간 만들기
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    data->FontSize = 18; // 데이터 폰트 사이즈 설정
+    data->ID = 1;               // ID 1부터 시작
+    data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
+    data->FontSize = 18;        // 데이터 폰트 사이즈 설정
+    data->RenderMode = SOLID;   // 랜더모드 : 글자만 나오게
 
-    // cvs데이터 1번째줄 텍스트 10줄까지 초기화
-    //for (int32 ID = 1; ID < 50; ID++)
-    data->TextLineCheck = 0;
-    data->TextIdCheck = 1;
-
+    // ID 1부터 텍스트 20줄까지 이닛
     for (int32 i = 0; i < 20; ++i)
     {
-        Text_CreateText(&data->GuideLine[data->TextIdCheck][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->TextIdCheck)].Text[i], wcslen(Data[GetCsvData(data->TextIdCheck)].Text[i]));
+        Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
     }
-
-    //Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text[0], lstrlen(Data[GetCsvData(1)].Text[0]));
-
-    data->RenderMode = SOLID;
 
     Image_LoadImage(&data->BackGroundImage, "Scene1Background.png");
 
@@ -119,26 +112,28 @@ void update_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
+    // 델타타임 적용
     static float elapsedTime;
     elapsedTime += Timer_GetDeltaTime();
 
+    // 시간이 프르면 텍스트 줄 값++
     if (elapsedTime >= 1.0f)
     {
-        if (data->TextLineCheck < 10)
+        if (data->TextLine < 20)
         {
-            data->TextLineCheck++;
+            data->TextLine++;
         }
         elapsedTime = 0.0f;
     }
 
     if (Input_GetKeyDown(VK_SPACE))
     {
-        data->TextIdCheck++;
-        data->TextLineCheck = 0;
-        // Text_Cleanup();
+        data->ID++;         // ID 다음으로 넘어감
+        data->TextLine = 0; // 텍스트줄 0초기화
+        
         for (int32 i = 0; i < 20; ++i)
         {
-            Text_CreateText(&data->GuideLine[data->TextIdCheck][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->TextIdCheck)].Text[i], wcslen(Data[GetCsvData(data->TextIdCheck)].Text[i]));
+            Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
         }
     }
 
@@ -152,19 +147,25 @@ void update_title(void)
     //    --data->FontSize;
     //    Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
     //}
-
-
 }
 
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    for (int32 i = 0; i < data->TextLineCheck; i++)
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
+    for (int32 i = 0; i < data->TextLine; i++)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[data->TextIdCheck][i], 100, 200 + 30 * i, color);
+        Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 200 + 30 * i, color);
+        
+        // 텍스트 줄에 아무것도 없는 텍스트 줄이 연속으로 나오면 선택지 출력
+        if (&data->GuideLine[data->ID][i] == "\0" && &data->GuideLine[data->ID][i+1] == "\0")
+        {
+            Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 200 + 30 * i, color);
+        }
     }
+
 
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
@@ -203,10 +204,8 @@ void release_title(void)
 
     for (int32 i = 0; i < 10; ++i)
     {
-        Text_FreeText(&data->GuideLine[data->TextIdCheck][i]);
+        Text_FreeText(&data->GuideLine[data->ID][i]);
     }
-
-    Text_FreeText(&data->TestText);
 
     SafeFree(g_Scene.Data);
 }
