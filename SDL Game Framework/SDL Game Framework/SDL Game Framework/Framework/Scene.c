@@ -1,4 +1,4 @@
-癤�#include "stdafx.h"
+#include "stdafx.h"
 #include "Scene.h"
 
 #include "Framework.h"
@@ -16,11 +16,11 @@ static ESceneType s_nextScene = SCENE_NULL;
 
 typedef struct Start_Data
 {
-    Image      Start_BackGround_Image;
-    float      Speed;
-    int32      X;
-    int32      Y;
-    int32      Alpha;
+    Image		Start_BackGround_Image;
+    float		Speed;
+    int32		X;
+    int32		Y;
+    int32		Alpha;
 
 } Start_Data;
 
@@ -73,16 +73,16 @@ void release_start(void)
 
 typedef struct TitleSceneData
 {
-    Text   GuideLine[50][20]; //[id][ 摹侮 ]
+    Text   GuideLine[50][20]; //[id][줄바꿈]
     Text   TestText;
     int32   FontSize;
     int32   RenderMode;
     Image   BackGroundImage;
     int32   TextLineCheck;
     int32   TextIdCheck;
-    int32      X;
-    int32      Y;
-    int32      Alpha;
+    int32		X;
+    int32		Y;
+    int32		Alpha;
 } TitleSceneData;
 
 void init_title(void)
@@ -92,9 +92,9 @@ void init_title(void)
 
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    data->FontSize = 18; //          트            
+    data->FontSize = 18; // 데이터 폰트 사이즈 설정
 
-    // cvs       1  째    灣 트 10 袂     珂 화
+    // cvs데이터 1번째줄 텍스트 10줄까지 초기화
     //for (int32 ID = 1; ID < 50; ID++)
     data->TextLineCheck = 0;
     data->TextIdCheck = 1;
@@ -453,7 +453,7 @@ void release_main(void)
 //{
 //    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
 //
-//    //    傷  타  치      毬      쨉      
+//    // 나중에 타자치듯이 하나씩 출력될 예정
 //
 //}
 //
