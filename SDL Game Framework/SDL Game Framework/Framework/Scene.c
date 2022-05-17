@@ -69,11 +69,21 @@ void release_start(void)
 #pragma endregion
 
 #pragma region TitleScene
+
+const wchar_t* str[] = {
+    L"▶ 선택지 1",
+    L"▶ 선택지 2",
+    L"▶ 선택지 3"
+};
+
 typedef struct TitleSceneData
 {
-    Text   GuideLine[50][20]; //[id][줄바꿈]
+    Text    GuideLine[50][20]; //[id][줄바꿈]
+    Text    GuideLineMovingPage[3][20]; //[선택지3개][선택지글자개수]
+    Text    ShadedSelect;
     int32   FontSize;
     int32   RenderMode;
+    int32   SelectNestScene;
     Image   BackGroundImage;
     int32   TextLine;
     int32   ID;
@@ -84,6 +94,7 @@ typedef struct TitleSceneData
 
 void init_title(void)
 {
+    
     // 이닛 타이틀 데이터가 들어갈 공간 만들기
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
@@ -101,6 +112,17 @@ void init_title(void)
         Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
     }
 
+    // 선택지 3줄 이닛
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_CreateText(&data->GuideLineMovingPage[i], "d2coding.ttf", 16, str[i], wcslen(str[i]));
+    }
+
+    // 셰이드 텍스트 이닛
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_CreateText(&data->ShadedSelect, "d2coding.ttf", data->FontSize, str[i], wcslen(str[i]));
+    }
     Image_LoadImage(&data->BackGroundImage, "Scene1Background.png");
 
     data->X;
@@ -136,6 +158,25 @@ void update_title(void)
             Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
         }
     }
+    if (Input_GetKeyDown(VK_RIGHT))
+    {
+        data->TextLine = 20;
+    }
+
+    // 선택한부분 음영넣기
+    int SelectShadedIndex = 0;
+    data->ShadedSelect = str[SelectShadedIndex];
+    if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
+    {
+        if (Input_GetKeyDown(VK_DOWN))
+        {
+            SelectShadedIndex++;
+        }
+        if (Input_GetKeyDown(VK_UP))
+        {
+            SelectShadedIndex--;
+        }
+    }
 
     //if (Input_GetKeyDown('C'))
     //{
@@ -153,19 +194,34 @@ void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
+    bool isFinishTextLine = false;
+
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < data->TextLine; i++)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 200 + 30 * i, color);
+        Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 100 + 28 * i, color);
         
         // 텍스트 줄에 아무것도 없는 텍스트 줄이 연속으로 나오면 선택지 출력
-        if (&data->GuideLine[data->ID][i] == "\0" && &data->GuideLine[data->ID][i+1] == "\0")
+        if (&data->GuideLine[data->ID][i] == "" && &data->GuideLine[data->ID][i + 1] == "")
+            isFinishTextLine = true;
+    }
+
+    // 텍스트 줄에 아무것도 없는 텍스트 줄이 연속으로 나오면 선택지 3줄 출력
+    if (true)
+    {
+        for (int32 i = 0; i < 3; ++i)
         {
-            Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 200 + 30 * i, color);
+            SDL_Color color = { .a = 255 };
+            Renderer_DrawTextSolid(&data->GuideLineMovingPage[i], 100, 600 + 30 * i, color);
         }
     }
 
+    // 선택된 곳 셰이드 출력
+    SDL_Color bg = { .a = 255 };
+    SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+    Renderer_DrawTextShaded(&data->ShadedSelect, 400, 400, fg, bg);
+    
 
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
@@ -173,29 +229,29 @@ void render_title(void)
 
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
 
-    //switch (data->RenderMode)
-    //{
-    //case SOLID:
-    //{
-    //    SDL_Color color = { .a = 255 };
-    //    Renderer_DrawTextSolid(&data->TestText, 400, 400, color);
-    //}
-    //break;
-    //case SHADED:
-    //{
-    //    SDL_Color bg = { .a = 255 };
-    //    SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
-    //    Renderer_DrawTextShaded(&data->TestText, 400, 400, fg, bg);
-    //}
-    //break;
-    //case BLENDED:
-    //{
-    //    Renderer_DrawImage(&data->TestImage, 400, 400);
-    //    SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
-    //    Renderer_DrawTextBlended(&data->TestText, 400, 400, color);
-    //}
-    //break;
-    //}
+    switch (data->RenderMode)
+    {
+    case SOLID:
+    {
+        SDL_Color color = { .a = 255 };
+        Renderer_DrawTextSolid(&data->GuideLineMovingPage, 400, 400, color);
+    }
+    break;
+    case SHADED:
+    {
+        SDL_Color bg = { .a = 255 };
+        SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+        Renderer_DrawTextShaded(&data->GuideLineMovingPage, 400, 400, fg, bg);
+    }
+    break;
+    case BLENDED:
+    {
+        //Renderer_DrawImage(&data->TestImage, 400, 400);
+        SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
+        Renderer_DrawTextBlended(&data->GuideLineMovingPage, 400, 400, color);
+    }
+    break;
+    }
 }
 
 void release_title(void)
@@ -206,7 +262,14 @@ void release_title(void)
     {
         Text_FreeText(&data->GuideLine[data->ID][i]);
     }
-
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_FreeText(&data->GuideLineMovingPage[i]);
+    }
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_FreeText(&data->ShadedSelect[i]);
+    }
     SafeFree(g_Scene.Data);
 }
 #pragma endregion
@@ -398,8 +461,6 @@ void release_main(void)
 }
 #pragma endregion
 
-
-
 //#pragma region ImageScene1
 //
 //const wchar_t* str3[] = {
@@ -506,11 +567,6 @@ void release_main(void)
 //}
 //
 //#pragma endregion
-
-
-
-
-
 
 bool Scene_IsSetNextScene(void)
 {
