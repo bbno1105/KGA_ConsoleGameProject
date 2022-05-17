@@ -48,7 +48,7 @@ void init_title(void)
 	}
 
 	data->FontSize = 24;
-	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetData(1)].String, 13);
+	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(8)].Text[3],lstrlen(Data[GetCsvData(8)].Text[3]));
 
 	data->RenderMode = SOLID;
 
@@ -175,7 +175,6 @@ typedef struct MainSceneData
 	Music		BGM;
 	float		Volume;
 	SoundEffect Effect;
-	Image		Front;
 	Image		BackGround;
 	float		Speed;
 	int32		X;
@@ -205,7 +204,7 @@ void init_main(void)
 		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
 	}
 	
-	Image_LoadImage(&data->Front, "main.png");
+	Image_LoadImage(&data->BackGround, "main.png");
 
 	Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	Audio_HookMusicFinished(logOnFinished);
@@ -320,7 +319,7 @@ void update_main(void)
 
 	if (Input_GetKeyDown(VK_SPACE))
 	{
-		Scene_SetNextScene(SCENE_END);
+		Scene_SetNextScene(SCENE_1);
 	}
 }
 
@@ -333,9 +332,11 @@ void render_main(void)
 		SDL_Color color = { .a = 255 };
 		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
 	}
-
-	Renderer_DrawImage(&data->Front, 0,0);
-	Renderer_DrawImage(&data->BackGround, data->X, data->Y);
+	
+	data->BackGround.Width = 1280;
+	data->BackGround.Height = 720;
+	Renderer_DrawImage(&data->BackGround, 0,0);
+	//Renderer_DrawImage(&data->BackGround, data->X, data->Y);
 }
 
 void release_main(void)
@@ -360,7 +361,8 @@ void release_main(void)
 
 typedef struct Scene1_Data
 {		
-	Image		Scene1_BackGround;
+	Text		GuideLine[GUIDELINE_COUNT];
+	Image		Scene1_BackGround_Image;
 	float		Speed;
 	int32		X;
 	int32		Y;
@@ -375,25 +377,34 @@ void init_scene_1(void)
 
 	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
 
-	Image_LoadImage(&data->Scene1_BackGround, "Background.png");
+	Image_LoadImage(&data->Scene1_BackGround_Image, "Scene1Background.png");
+	
 
 	data->Speed = 400.0f;
-	data->X = 0;
-	data->Y = 0;
-	data->Alpha = 100;
+	data->X;
+	data->Y;
+	data->Alpha;
 }
 
 void update_scene_1(void)
 {
 	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_2);
+	}
 }
 
 void render_scene_1(void)
 {
 	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
 
-	Image_SetAlphaValue(&data->Scene1_BackGround, data->Alpha);
-	Renderer_DrawImage(&data->Scene1_BackGround, 0, 0);
+	data->Scene1_BackGround_Image.Width = 1280;
+	data->Scene1_BackGround_Image.Height = 720;
+	Image_SetAlphaValue(&data->Scene1_BackGround_Image, 125);
+
+	Renderer_DrawImage(&data->Scene1_BackGround_Image, 0, 0);
 }
 
 void release_scene_1(void)
@@ -401,6 +412,65 @@ void release_scene_1(void)
 	Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
 
 	SafeFree(g_Scene.Data);
+}
+
+#pragma endregion
+
+#pragma region scene_2
+
+typedef struct Scene2_Data
+{
+	Text		GuideLine[GUIDELINE_COUNT];
+	Image		Scene2_Front_Image;
+	Image		Scene2_BackGround_Image;
+	float		Speed;
+	int32		X;
+	int32		Y;
+	int32		Alpha;
+
+} Scene2_Data;
+
+void init_scene_2(void)
+{
+	g_Scene.Data = malloc(sizeof(Scene2_Data));
+	memset(g_Scene.Data, 0, sizeof(Scene2_Data));
+
+	Scene2_Data* data = (Scene2_Data*)g_Scene.Data;
+
+	Image_LoadImage(&data->Scene2_Front_Image, "Scene2_Morning.jpg");
+	Image_LoadImage(&data->Scene2_BackGround_Image, "Scene1Background.png");
+
+
+	data->Speed = 400.0f;
+	data->X;
+	data->Y;
+	data->Alpha = 255;
+data->Scene2_Front_Image.Width -= 150;
+data->Scene2_Front_Image.Height -= 150;
+}
+
+void update_scene_2(void)
+{
+	Scene2_Data* data = (Scene2_Data*)g_Scene.Data;
+}
+
+void render_scene_2(void)
+{
+	Scene2_Data* data = (Scene2_Data*)g_Scene.Data;
+
+
+	data->Scene2_BackGround_Image.Width = 1280;
+	data->Scene2_BackGround_Image.Height = 720;
+	Image_SetAlphaValue(&data->Scene2_BackGround_Image, 125);
+	Renderer_DrawImage(&data->Scene2_BackGround_Image, 0, 0);
+
+	Image_SetAlphaValue(&data->Scene2_Front_Image, data->Alpha);
+	Renderer_DrawImage(&data->Scene2_Front_Image, 850, 40);
+}
+
+void release_scene_2(void)
+{
+	Scene2_Data* data = (Scene2_Data*)g_Scene.Data;
 }
 
 #pragma endregion
@@ -448,11 +518,17 @@ void Scene_Change(void)
 		g_Scene.Render = render_main;
 		g_Scene.Release = release_main;
 		break;
-	case SCENE_END:
+	case SCENE_1:
 		g_Scene.Init = init_scene_1;
 		g_Scene.Update = update_scene_1;
 		g_Scene.Render = render_scene_1;
 		g_Scene.Release = release_scene_1;
+		break;
+	case SCENE_2:
+		g_Scene.Init = init_scene_2;
+		g_Scene.Update = update_scene_2;
+		g_Scene.Render = render_scene_2;
+		g_Scene.Release = release_scene_2;
 		break;
 	}
 
