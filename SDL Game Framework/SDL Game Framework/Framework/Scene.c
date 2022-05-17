@@ -7,38 +7,101 @@ Scene g_Scene;
 
 static ESceneType s_nextScene = SCENE_NULL;
 
-#pragma region TitleScene
+#pragma region START
 
 #define SOLID 0
 #define SHADED 1
 #define BLENDED 2
 
-const wchar_t* str[] = {
-	L"여기는 타이틀씬입니다. 텍스트와 관련된 여러가지를 테스트해봅시다.",
-	L"B키를 누르면 폰트가 굵게 변합니다.",
-	L"I키를 누르면 폰트가 이탤릭체로 변합니다.",
-	L"U키를 누르면 텍스트에 밑줄이 생깁니다.",
-	L"S키를 누르면 텍스트에 취소선이 생깁니다.",
-	L"N키를 누르면 다시 원래대로 돌아옵니다.",
-	L"C키를 누르면 렌더 모드가 바뀝니다. (Solid -> Shaded -> Blended)",
-	L"1키를 누르면 텍스트가 작아집니다.",
-	L"2키를 누르면 텍스트가 커집니다.",
-	L"스페이스 키를 누르면 다음 씬으로 넘어갑니다."
+typedef struct Start_Data
+{
+    Image		Start_BackGround_Image;
+    float		Speed;
+    int32		X;
+    int32		Y;
+    int32		Alpha;
+
+} Start_Data;
+
+void init_start(void)
+{
+    g_Scene.Data = malloc(sizeof(Start_Data));
+    memset(g_Scene.Data, 0, sizeof(Start_Data));
+
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    Image_LoadImage(&data->Start_BackGround_Image, "main.png");
+
+    data->X;
+    data->Y;
+    data->Alpha;
+}
+
+void update_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    if (Input_GetKeyDown(VK_SPACE))
+    {
+        Scene_SetNextScene(SCENE_TITLE);
+    }
+}
+
+void render_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    data->Start_BackGround_Image.Width = 1920;
+    data->Start_BackGround_Image.Height = 1080;
+    Image_SetAlphaValue(&data->Start_BackGround_Image, 255);
+
+    Renderer_DrawImage(&data->Start_BackGround_Image, 0, 0);
+}
+
+void release_start(void)
+{
+    Start_Data* data = (Start_Data*)g_Scene.Data;
+
+    SafeFree(g_Scene.Data);
+}
+
+#pragma endregion
+
+#pragma region TitleScene
+
+const wchar_t* str1[] = {
+   L"GAME START"
+};
+
+const wchar_t* str2[] = {
+    L"▶ 선택지 1",
+    L"▶ 선택지 2",
+    L"▶ 선택지 3"
 };
 
 typedef struct TitleSceneData
 {
-	Text	GuideLine[20];
-	Text	TestText;
-	int32	FontSize;
-	int32	RenderMode;
-	Image	TestImage;
+    Text    GuideLine[50][20]; //[id][줄바꿈]
+    Text    GuideLineMovingPage[3][20]; //[선택지3개][선택지글자개수]
+    Text    ShadedSelect[3][20]; //[선택지3개][선택지글자개수]
+    int32   FontSize;
+    int32   RenderMode;
+    int32   SelectNestScene;
+    Image   BackGroundImage;
+    int32   TextLine;
+    int32   ID;
+    int32	X;
+    int32	Y;
+    int32	Alpha;
 } TitleSceneData;
 
 void init_title(void)
 {
-	g_Scene.Data = malloc(sizeof(TitleSceneData));
-	memset(g_Scene.Data, 0, sizeof(TitleSceneData));
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    
+    // 이닛 타이틀 데이터가 들어갈 공간 만들기
+    g_Scene.Data = malloc(sizeof(TitleSceneData));
+    memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
@@ -52,351 +115,514 @@ void init_title(void)
 		if (*testtext == NULL) break;
 	}
 
-	data->FontSize = 24;
-	
-	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, testtext, lstrlen(testtext));
-	data->RenderMode = SOLID;
+    data->ID = 1;               // ID 1부터 시작
+    data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
+    data->FontSize = 18;        // 데이터 폰트 사이즈 설정
+    data->RenderMode = SOLID;   // 랜더모드 : 글자만 나오게
 
-	Image_LoadImage(&data->TestImage, "Background.jfif");
+    // ID 1부터 텍스트 20줄까지 이닛
+    for (int32 i = 0; i < 20; ++i)
+    {
+        Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
+    }
+
+    // 선택지 3줄 이닛
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_CreateText(&data->GuideLineMovingPage[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
+    }
+
+    // 셰이드 텍스트 이닛
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_CreateText(&data->ShadedSelect[i], "d2coding.ttf", data->FontSize, str2[i], wcslen(str2[i]));
+    }
+    Image_LoadImage(&data->BackGroundImage, "Scene1Background.png");
+
+    data->X;
+    data->Y;
+    data->Alpha;
 }
 
 void update_title(void)
 {
-	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	if (Input_GetKeyDown('B'))
-	{
-		Text_SetFontStyle(&data->TestText, FS_BOLD);
-	}
+    // 델타타임 적용
+    static float elapsedTime;
+    elapsedTime += Timer_GetDeltaTime();
 
-	if (Input_GetKeyDown('I'))
-	{
-		Text_SetFontStyle(&data->TestText, FS_ITALIC);
-	}
+    // 시간이 프르면 텍스트 줄 값++
+    if (elapsedTime >= 1.0f)
+    {
+        if (data->TextLine < 20)
+        {
+            data->TextLine++;
+        }
+        elapsedTime = 0.0f;
+    }
 
-	if (Input_GetKeyDown('U'))
-	{
-		Text_SetFontStyle(&data->TestText, FS_UNDERLINE);
-	}
+    // 다음페이지 넘김
+    if (Input_GetKeyDown(VK_SPACE))
+    {
+        data->ID++;         // ID 다음으로 넘어감
+        data->TextLine = 0; // 텍스트줄 0초기화
+        
+        for (int32 i = 0; i < 20; ++i)
+        {
+            Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
+        }
+    }
 
-	if (Input_GetKeyDown('S'))
-	{
-		Text_SetFontStyle(&data->TestText, FS_STRIKETHROUGH);
-	}
+    // 텍스트 스킵
+    if (Input_GetKeyDown(VK_RIGHT))
+    {
+        data->TextLine = 20;
+    }
 
-	if (Input_GetKeyDown('N'))
-	{
-		Text_SetFontStyle(&data->TestText, FS_NORMAL);
-	}
-
-	if (Input_GetKeyDown('C'))
-	{
-		data->RenderMode = (data->RenderMode + 1) % 3;
-	}
-
-	if (Input_GetKey('1'))
-	{
-		--data->FontSize;
-		Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
-	}
-
-	if (Input_GetKey('2'))
-	{
-		++data->FontSize;
-		Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
-	}
-
-	if (Input_GetKeyDown(VK_SPACE))
-	{
-		Scene_SetNextScene(SCENE_MAIN);
-	}
+    // 선택한부분 음영넣기
+    int SelectShadedIndex = 0;
+    &data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
+    if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
+    {
+        if (Input_GetKeyDown(VK_DOWN))
+        {
+            SelectShadedIndex++;
+        }
+        if (Input_GetKeyDown(VK_UP))
+        {
+            SelectShadedIndex--;
+        }
+    }
 }
 
 void render_title(void)
 {
-	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-	for (int32 i = 0; i < 20; ++i)
-	{
-		SDL_Color color = { .a = 255 };
-		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
-	}
-	
-	switch (data->RenderMode)
-	{
-	case SOLID:
-	{
-		SDL_Color color = { .a = 255 };
-		Renderer_DrawTextSolid(&data->TestText, 400, 400, color);
-	}
-	break;
-	case SHADED:
-	{
-		SDL_Color bg = { .a = 255 };
-		SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
-		Renderer_DrawTextShaded(&data->TestText, 400, 400, fg, bg);
-	}
-	break;
-	case BLENDED:
-	{
-		Renderer_DrawImage(&data->TestImage, 400, 400);
-		SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
-		Renderer_DrawTextBlended(&data->TestText, 400, 400, color);
-	}
-	break;
-	}
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+
+    bool isFinishTextLine = false;
+
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
+    for (int32 i = 0; i < data->TextLine; i++)
+    {
+        SDL_Color color = { .a = 255 };
+        Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 100 + 28 * i, color);
+        
+        // 텍스트 줄에 아무것도 없는 텍스트 줄이 연속으로 나오면 선택지 출력
+        if (&data->GuideLine[data->ID][i] == "" && &data->GuideLine[data->ID][i + 1] == "")
+            isFinishTextLine = true;
+    }
+
+    // 텍스트 줄에 아무것도 없는 텍스트 줄이 연속으로 나오면 선택지 3줄 출력
+    if (true)
+    {
+        for (int32 i = 0; i < 3; ++i)
+        {
+            SDL_Color color = { .a = 255 };
+            Renderer_DrawTextSolid(&data->GuideLineMovingPage[i], 100, 600 + 30 * i, color);
+        }
+    }
+
+    // 선택된 곳 셰이드 출력
+    SDL_Color bg = { .a = 255 };
+    SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+    Renderer_DrawTextShaded(&data->ShadedSelect, 400, 400, fg, bg);
+    
+
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+
+    switch (data->RenderMode)
+    {
+    case SOLID:
+    {
+        SDL_Color color = { .a = 255 };
+        Renderer_DrawTextSolid(&data->GuideLineMovingPage, 400, 400, color);
+    }
+    break;
+    case SHADED:
+    {
+        SDL_Color bg = { .a = 255 };
+        SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+        Renderer_DrawTextShaded(&data->GuideLineMovingPage, 400, 400, fg, bg);
+    }
+    break;
+    case BLENDED:
+    {
+        //Renderer_DrawImage(&data->TestImage, 400, 400);
+        SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
+        Renderer_DrawTextBlended(&data->GuideLineMovingPage, 400, 400, color);
+    }
+    break;
+    }
 }
 
 void release_title(void)
 {
-	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < 10; ++i)
-	{
-		Text_FreeText(&data->GuideLine[i]);
-	}
-	Text_FreeText(&data->TestText);
-
-	SafeFree(g_Scene.Data);
+    for (int32 i = 0; i < 10; ++i)
+    {
+        Text_FreeText(&data->GuideLine[data->ID][i]);
+    }
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_FreeText(&data->GuideLineMovingPage[i]);
+    }
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_FreeText(&data->ShadedSelect[i]);
+    }
+    SafeFree(g_Scene.Data);
 }
 #pragma endregion
 
 #pragma region MainScene
-const wchar_t* str2[] = {
-	L"여기서는 사운드와 이미지 블렌딩에 대해서 알아봅시다.",
-	L"화살표키로 이미지를 이동시킬 수 있습니다.",
-	L"E키를 누르면 이펙트를 재생시킬 수 있습니다. 이펙트 소리가 작으니 볼륨을 낮춘 후 진행하세요.",
-	L"M키로 음악을 끄거나 켤 수 있습니다.",
-	L"P키로 음악을 멈추거나 재개할 수 있습니다.",
-	L"1번과 2번으로 볼륨을 조절할 수 있습니다.",
-	L"WASD로 이미지의 스케일을 조정할 수 있습니다.",
-	L"KL키로 이미지의 투명도를 조절할 수 있습니다."
-};
-
 #define GUIDELINE_COUNT 8
+
 
 typedef struct MainSceneData
 {
-	Text		GuideLine[GUIDELINE_COUNT];
-	Music		BGM;
-	float		Volume;
-	SoundEffect Effect;
-	Image		BackGround;
-	float		Speed;
-	int32		X;
-	int32		Y;
-	int32		Alpha;
+    Text      GuideLine[GUIDELINE_COUNT];
+    Music      BGM;
+    float      Volume;
+    SoundEffect Effect;
+    Image      Front;
+    Image      BackGround;
+    float      Speed;
+    int32      X;
+    int32      Y;
+    int32      Alpha;
 } MainSceneData;
 
 void logOnFinished(void)
 {
-	LogInfo("You can show this log on stopped the music");
+    LogInfo("You can show this log on stopped the music");
 }
 
 void log2OnFinished(int32 channel)
 {
-	LogInfo("You can show this log on stopped the effect");
+    LogInfo("You can show this log on stopped the effect");
 }
 
 void init_main(void)
 {
-	g_Scene.Data = malloc(sizeof(MainSceneData));
-	memset(g_Scene.Data, 0, sizeof(MainSceneData));
+    g_Scene.Data = malloc(sizeof(MainSceneData));
+    memset(g_Scene.Data, 0, sizeof(MainSceneData));
 
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
+    MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-	{
-		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
-	}
-	
-	Image_LoadImage(&data->BackGround, "background.jfif");
+    for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
+    {
+        Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
+    }
 
-	Audio_LoadMusic(&data->BGM, "powerful.mp3");
-	Audio_HookMusicFinished(logOnFinished);
-	Audio_LoadSoundEffect(&data->Effect, "effect2.wav"); // Data[GetCsvData(1)].String
-	Audio_HookSoundEffectFinished(log2OnFinished);
-	Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
+    Image_LoadImage(&data->Front, "main.png");
 
-	data->Volume = 1.0f;
+    Audio_LoadMusic(&data->BGM, "powerful.mp3");
+    Audio_HookMusicFinished(logOnFinished);
+    Audio_LoadSoundEffect(&data->Effect, "effect2.wav");
+    Audio_HookSoundEffectFinished(log2OnFinished);
+    Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
 
-	data->Speed = 400.0f;
-	data->X = 400;
-	data->Y = 400;
-	data->Alpha = 255;
+    data->Volume = 1.0f;
+
+    data->Speed = 400.0f;
+    data->X = 400;
+    data->Y = 400;
+    data->Alpha = 255;
 }
 
 void update_main(void)
 {
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
+    MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	if (Input_GetKeyDown('E'))
-	{
-		Audio_PlaySoundEffect(&data->Effect, 1);
-	}
+    if (Input_GetKeyDown('E'))
+    {
+        Audio_PlaySoundEffect(&data->Effect, 1);
+    }
 
-	if (Input_GetKeyDown('M'))
-	{
-		if (Audio_IsMusicPlaying())
-		{
-			Audio_Stop();
-		}
-		else
-		{
-			Audio_Play(&data->BGM, INFINITY_LOOP);
-		}
-	}
+    if (Input_GetKeyDown('M'))
+    {
+        if (Audio_IsMusicPlaying())
+        {
+            Audio_Stop();
+        }
+        else
+        {
+            Audio_Play(&data->BGM, INFINITY_LOOP);
+        }
+    }
 
-	if (Input_GetKeyDown('P'))
-	{
-		if (Audio_IsMusicPaused())
-		{
-			Audio_Resume();
-		}
-		else
-		{
-			Audio_Pause();
-		}
-	}
+    if (Input_GetKeyDown('P'))
+    {
+        if (Audio_IsMusicPaused())
+        {
+            Audio_Resume();
+        }
+        else
+        {
+            Audio_Pause();
+        }
+    }
 
-	if (Input_GetKey('1'))
-	{
-		data->Volume -= 0.01f;
-		Audio_SetVolume(data->Volume);
-	}
+    if (Input_GetKey('1'))
+    {
+        data->Volume -= 0.01f;
+        Audio_SetVolume(data->Volume);
+    }
 
-	if (Input_GetKey('2'))
-	{
-		data->Volume += 0.01f;
-		Audio_SetVolume(data->Volume);
-	}
+    if (Input_GetKey('2'))
+    {
+        data->Volume += 0.01f;
+        Audio_SetVolume(data->Volume);
+    }
 
-	if (Input_GetKey(VK_DOWN))
-	{
-		data->Y += data->Speed * Timer_GetDeltaTime();
-	}
+    if (Input_GetKey(VK_DOWN))
+    {
+        data->Y += data->Speed * Timer_GetDeltaTime();
+    }
 
-	if (Input_GetKey(VK_UP))
-	{
-		data->Y -= data->Speed * Timer_GetDeltaTime();
-	}
+    if (Input_GetKey(VK_UP))
+    {
+        data->Y -= data->Speed * Timer_GetDeltaTime();
+    }
 
-	if (Input_GetKey(VK_LEFT))
-	{
-		data->X -= data->Speed * Timer_GetDeltaTime();
-	}
+    if (Input_GetKey(VK_LEFT))
+    {
+        data->X -= data->Speed * Timer_GetDeltaTime();
+    }
 
-	if (Input_GetKey(VK_RIGHT))
-	{
-		data->X += data->Speed * Timer_GetDeltaTime();
-	}
+    if (Input_GetKey(VK_RIGHT))
+    {
+        data->X += data->Speed * Timer_GetDeltaTime();
+    }
 
-	if (Input_GetKey('W'))
-	{
-		data->BackGround.ScaleY -= 0.05f;
-	}
+    if (Input_GetKey('W'))
+    {
+        data->BackGround.ScaleY -= 0.05f;
+    }
 
-	if (Input_GetKey('S'))
-	{
-		data->BackGround.ScaleY += 0.05f;
-	}
+    if (Input_GetKey('S'))
+    {
+        data->BackGround.ScaleY += 0.05f;
+    }
 
-	if (Input_GetKey('A'))
-	{
-		data->BackGround.ScaleX -= 0.05f;
-	}
+    if (Input_GetKey('A'))
+    {
+        data->BackGround.ScaleX -= 0.05f;
+    }
 
-	if (Input_GetKey('D'))
-	{
-		data->BackGround.ScaleX += 0.05f;
-	}
+    if (Input_GetKey('D'))
+    {
+        data->BackGround.ScaleX += 0.05f;
+    }
 
-	if (Input_GetKey('K'))
-	{
-		data->Alpha = Clamp(0, data->Alpha - 1, 255);
-		Image_SetAlphaValue(&data->BackGround, data->Alpha);
-	}
+    if (Input_GetKey('K'))
+    {
+        data->Alpha = Clamp(0, data->Alpha - 1, 255);
+        Image_SetAlphaValue(&data->BackGround, data->Alpha);
+    }
 
-	if (Input_GetKey('L'))
-	{
-		data->Alpha = Clamp(0, data->Alpha + 1, 255);
-		Image_SetAlphaValue(&data->BackGround, data->Alpha);
-	}
+    if (Input_GetKey('L'))
+    {
+        data->Alpha = Clamp(0, data->Alpha + 1, 255);
+        Image_SetAlphaValue(&data->BackGround, data->Alpha);
+    }
+
 }
 
 void render_main(void)
 {
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
+    MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-	{
-		SDL_Color color = { .a = 255 };
-		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
-	}
+    for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
+    {
+        SDL_Color color = { .a = 255 };
+        Renderer_DrawTextSolid(&data->GuideLine[i], 100, 400 + 25 * i, color);
+    }
 
-	Renderer_DrawImage(&data->BackGround, data->X, data->Y);
+    Renderer_DrawImage(&data->Front, 0, 0);
+    Renderer_DrawImage(&data->BackGround, data->X, data->Y);
 }
 
 void release_main(void)
 {
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
+    MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-	{
-		Text_FreeText(&data->GuideLine[i]);
-	}
-	Audio_FreeMusic(&data->BGM);
-	Audio_FreeSoundEffect(&data->Effect);
+    for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
+    {
+        Text_FreeText(&data->GuideLine[i]);
+    }
+    Audio_FreeMusic(&data->BGM);
+    Audio_FreeSoundEffect(&data->Effect);
 
-	SafeFree(g_Scene.Data);
+    SafeFree(g_Scene.Data);
 }
 #pragma endregion
 
+//#pragma region ImageScene1
+//
+//const wchar_t* str3[] = {
+//   L"GAME START"
+//};
+//
+//typedef struct Scene1_Data
+//{
+//    Image      Scene1_BackGround;
+//    float      Speed;
+//    int32      X;
+//    int32      Y;
+//    int32      Alpha;
+//    Text   GuideLine[10];
+//    Text   TestText;
+//    int32   FontSize;
+//    int32   RenderMode;
+//    int32      NextText;
+//    int32      check;
+//
+//} Scene1_Data;
+//
+//void init_scene_1(void)
+//{
+//    g_Scene.Data = malloc(sizeof(Scene1_Data));
+//    memset(g_Scene.Data, 0, sizeof(Scene1_Data));
+//
+//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+//
+//    Image_LoadImage(&data->Scene1_BackGround, "Background.png");
+//    (data->Scene1_BackGround.ScaleX = 10);
+//    (data->Scene1_BackGround.ScaleY = 10);
+//
+//    data->Speed = 400.0f;
+//    data->X = 0;
+//    data->Y = 0;
+//    data->Alpha = 100;
+//
+//
+//    data->FontSize = 50;
+//    Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
+//
+//    data->RenderMode = SOLID;
+//
+//    data->NextText = false;
+//    data->check = 0;
+//}
+//
+//void update_scene_1(void)
+//{
+//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+//
+//    // 나중에 타자치듯이 하나씩 출력될 예정
+//
+//}
+//
+//void render_scene_1(void)
+//{
+//
+//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+//
+//
+//    Image_SetAlphaValue(&data->Scene1_BackGround, data->Alpha);
+//    Renderer_DrawImage(&data->Scene1_BackGround, 0, 0);
+//
+//    for (int32 i = 0; i < 10; ++i)
+//    {
+//        SDL_Color color = { .a = 255 };
+//        Renderer_DrawTextSolid(&data->GuideLine[i], 400, 200 * i, color);
+//    }
+//
+//    switch (data->RenderMode)
+//    {
+//    case SOLID:
+//    {
+//        SDL_Color color = { .a = 255 };
+//        Renderer_DrawTextSolid(&data->TestText, 400, 400, color);
+//    }
+//    break;
+//    case SHADED:
+//    {
+//        SDL_Color bg = { .a = 255 };
+//        SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+//        Renderer_DrawTextShaded(&data->TestText, 400, 400, fg, bg);
+//    }
+//    break;
+//    }
+//
+//
+//}
+//
+//void release_scene_1(void)
+//{
+//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
+//
+//    for (int32 i = 0; i < 10; ++i)
+//    {
+//        Text_FreeText(&data->GuideLine[i]);
+//    }
+//    Text_FreeText(&data->TestText);
+//
+//    SafeFree(g_Scene.Data);
+//
+//}
+//
+//#pragma endregion
+
 bool Scene_IsSetNextScene(void)
 {
-	if (SCENE_NULL == s_nextScene)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+    if (SCENE_NULL == s_nextScene)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 void Scene_SetNextScene(ESceneType scene)
 {
-	assert(s_nextScene == SCENE_NULL);
-	assert(SCENE_NULL < scene&& scene < SCENE_MAX);
+    assert(s_nextScene == SCENE_NULL);
+    assert(SCENE_NULL < scene&& scene < SCENE_MAX);
 
-	s_nextScene = scene;
+    s_nextScene = scene;
 }
 
 void Scene_Change(void)
 {
-	assert(s_nextScene != SCENE_NULL);
+    assert(s_nextScene != SCENE_NULL);
 
-	if (g_Scene.Release)
-	{
-		g_Scene.Release();
-	}
+    if (g_Scene.Release)
+    {
+        g_Scene.Release();
+    }
 
-	switch (s_nextScene)
-	{
-	case SCENE_TITLE:
-		g_Scene.Init = init_title;
-		g_Scene.Update = update_title;
-		g_Scene.Render = render_title;
-		g_Scene.Release = release_title;
-		break;
-	case SCENE_MAIN:
-		g_Scene.Init = init_main;
-		g_Scene.Update = update_main;
-		g_Scene.Render = render_main;
-		g_Scene.Release = release_main;
-		break;
-	}
+    switch (s_nextScene)
+    {
+    case SCENE_START:
+        g_Scene.Init = init_start;
+        g_Scene.Update = update_start;
+        g_Scene.Render = render_start;
+        g_Scene.Release = release_start;
+        break;
+    case SCENE_TITLE:
+        g_Scene.Init = init_title;
+        g_Scene.Update = update_title;
+        g_Scene.Render = render_title;
+        g_Scene.Release = release_title;
+        break;
+    case SCENE_MAIN:
+        g_Scene.Init = init_main;
+        g_Scene.Update = update_main;
+        g_Scene.Render = render_main;
+        g_Scene.Release = release_main;
+        break;
+    }
 
-	g_Scene.Init();
+    g_Scene.Init();
 
-	s_nextScene = SCENE_NULL;
+    s_nextScene = SCENE_NULL;
 }

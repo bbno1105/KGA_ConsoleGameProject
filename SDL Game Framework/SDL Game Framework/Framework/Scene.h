@@ -14,8 +14,10 @@ typedef struct Scene
 typedef enum SceneType
 {
 	SCENE_NULL,
+	SCENE_START,
 	SCENE_TITLE,
 	SCENE_MAIN,
+	SCENE_2,
 	SCENE_MAX
 } ESceneType;
 
