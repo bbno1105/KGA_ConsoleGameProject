@@ -36,7 +36,7 @@ typedef struct TitleSceneData
 	Image	TestImage;
 } TitleSceneData;
 
-void init_title(void)
+void init_title(void) 
 {
 	g_Scene.Data = malloc(sizeof(TitleSceneData));
 	memset(g_Scene.Data, 0, sizeof(TitleSceneData));

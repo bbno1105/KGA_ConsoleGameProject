@@ -11,7 +11,7 @@
 // int와 string 타입으로만 구분
 
 // [문제발생]
-// char 타입으로 만들어서 wchar로 바꿔야함
+// char 타입으로 만들어서 wchar로 바꿔야함 
 
 FILE* fp;
 
@@ -25,16 +25,13 @@ wchar_t* ConvertCtoWC(char* str)
 	int strLen = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, NULL);
 	MultiByteToWideChar(CP_ACP, 0, str, strlen(str), unicode, strLen);
 	return unicode;
-
-	//MultiByteToWideChar(CP_ACP, 0, csv, strlen(csv), wchar_csv, sizeof(wchar_csv) / sizeof(wchar_t));
 }
 
-wchar_t* ParseCsv(wchar_t* csvStr, wchar_t* saveStr) // csv파일문자, 저장할문자, 체크할문자
+wchar_t* ParseCsv(wchar_t* csvStr, wchar_t* saveStr)
 {
 	bool isString = false;
 	while (true)
 	{
-		// 문자열 진행중 or 2.쉼표x + 개행x << 이러면 그냥 넣어줌
 		if (isString)
 		{
 			if (*csvStr == L'"' && *(csvStr + 1) == L'"')
@@ -56,7 +53,7 @@ wchar_t* ParseCsv(wchar_t* csvStr, wchar_t* saveStr) // csv파일문자, 저장할문자,
 				csvStr = ConvertCtoWC(csv);
 				continue;
 			}
-			else // 그 외 저장
+			else
 			{
 				*saveStr = *csvStr;
 				saveStr++; csvStr++;
