@@ -48,7 +48,8 @@ void init_title(void)
 	}
 
 	data->FontSize = 24;
-	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetData(1)].String, 13);
+	
+	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetData(1)].String, lstrlen(Data[GetData(1)].String));
 
 	data->RenderMode = SOLID;
 
@@ -316,6 +317,11 @@ void update_main(void)
 		data->Alpha = Clamp(0, data->Alpha + 1, 255);
 		Image_SetAlphaValue(&data->BackGround, data->Alpha);
 	}
+
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_GAME);
+	}
 }
 
 void render_main(void)
@@ -335,12 +341,157 @@ void release_main(void)
 {
 	MainSceneData* data = (MainSceneData*)g_Scene.Data;
 
-	for (int32 i = 0; i < 10; ++i)
+	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
 	{
 		Text_FreeText(&data->GuideLine[i]);
 	}
 	Audio_FreeMusic(&data->BGM);
 	Audio_FreeSoundEffect(&data->Effect);
+
+	SafeFree(g_Scene.Data);
+}
+#pragma endregion
+
+
+#pragma region GameScene
+#define SOLID 0
+#define SHADED 1
+#define BLENDED 2
+
+const wchar_t* str3[] = {
+	L"나는 세상을 구한 영웅이다.",
+	L"이 모든 것은 나의 선택으로 정해졌다.",
+	L"",
+	L"귓가에 울려 퍼지는 비명소리…",
+	L"머릿속을 흔들어 놓는 피비린내…",
+	L"",
+	L"분명 행복했어야 할 우리의 결혼식이 어쩌다 여기까지 온 것일까"
+};
+
+typedef struct GameSceneData
+{
+	Text	GuideLine[10];
+	Text	TestText;
+	int32	FontSize;
+	int32	RenderMode;
+	Image	TestImage;
+} GameSceneData;
+
+void init_game(void)
+{
+	g_Scene.Data = malloc(sizeof(GameSceneData));
+	memset(g_Scene.Data, 0, sizeof(GameSceneData));
+
+	GameSceneData* data = (GameSceneData*)g_Scene.Data;
+	for (int32 i = 0; i < 10; ++i)
+	{
+		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str[i], wcslen(str[i]));
+	}
+
+	data->FontSize = 24;
+
+	Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetData(1)].String, lstrlen(Data[GetData(1)].String));
+
+	data->RenderMode = SOLID;
+
+	Image_LoadImage(&data->TestImage, "Background.jfif");
+}
+
+void update_game(void)
+{
+	GameSceneData* data = (GameSceneData*)g_Scene.Data;
+
+	if (Input_GetKeyDown('B'))
+	{
+		Text_SetFontStyle(&data->TestText, FS_BOLD);
+	}
+
+	if (Input_GetKeyDown('I'))
+	{
+		Text_SetFontStyle(&data->TestText, FS_ITALIC);
+	}
+
+	if (Input_GetKeyDown('U'))
+	{
+		Text_SetFontStyle(&data->TestText, FS_UNDERLINE);
+	}
+
+	if (Input_GetKeyDown('S'))
+	{
+		Text_SetFontStyle(&data->TestText, FS_STRIKETHROUGH);
+	}
+
+	if (Input_GetKeyDown('N'))
+	{
+		Text_SetFontStyle(&data->TestText, FS_NORMAL);
+	}
+
+	if (Input_GetKeyDown('C'))
+	{
+		data->RenderMode = (data->RenderMode + 1) % 3;
+	}
+
+	if (Input_GetKey('1'))
+	{
+		--data->FontSize;
+		Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
+	}
+
+	if (Input_GetKey('2'))
+	{
+		++data->FontSize;
+		Text_SetFont(&data->TestText, "d2coding.ttf", data->FontSize);
+	}
+
+	if (Input_GetKeyDown(VK_SPACE))
+	{
+		Scene_SetNextScene(SCENE_MAIN);
+	}
+}
+
+void render_game(void)
+{
+	GameSceneData* data = (GameSceneData*)g_Scene.Data;
+	for (int32 i = 0; i < 10; ++i)
+	{
+		SDL_Color color = { .a = 255 };
+		Renderer_DrawTextSolid(&data->GuideLine[i], 10, 20 * i, color);
+	}
+
+	switch (data->RenderMode)
+	{
+	case SOLID:
+	{
+		SDL_Color color = { .a = 255 };
+		Renderer_DrawTextSolid(&data->TestText, 400, 400, color);
+	}
+	break;
+	case SHADED:
+	{
+		SDL_Color bg = { .a = 255 };
+		SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
+		Renderer_DrawTextShaded(&data->TestText, 400, 400, fg, bg);
+	}
+	break;
+	case BLENDED:
+	{
+		Renderer_DrawImage(&data->TestImage, 400, 400);
+		SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
+		Renderer_DrawTextBlended(&data->TestText, 400, 400, color);
+	}
+	break;
+	}
+}
+
+void release_game(void)
+{
+	GameSceneData* data = (GameSceneData*)g_Scene.Data;
+
+	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
+	{ 
+		Text_FreeText(&data->GuideLine[i]);
+	}
+	Text_FreeText(&data->TestText);
 
 	SafeFree(g_Scene.Data);
 }
@@ -388,6 +539,12 @@ void Scene_Change(void)
 		g_Scene.Update = update_main;
 		g_Scene.Render = render_main;
 		g_Scene.Release = release_main;
+		break;
+	case SCENE_GAME:
+		g_Scene.Init = init_game;
+		g_Scene.Update = update_game;
+		g_Scene.Render = render_game;
+		g_Scene.Release = release_game;
 		break;
 	}
 

@@ -19,7 +19,7 @@ char* csv;
 wchar_t* wchar_csv;
 wchar_t save[500] = L"";
 
-wchar_t* ConvertCtoWC(char* str)
+wchar_t* ConvertCtoWC(char* str) //멀티바이트를 유니코드로 전환
 {
 	static wchar_t unicode[500] = L"";
 	int strLen = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, NULL);
@@ -145,3 +145,4 @@ int GetData(int ID)
 	}
 	return 0;
 }
+
