@@ -47,17 +47,7 @@ void Renderer_DrawTextSolid(const Text* text, int32 x, int32 y, SDL_Color color)
 	SDL_RenderCopy(g_App.Renderer, texture, NULL, &rect);
 
 	SDL_FreeSurface(surface);
-}
-
-void Renderer_DrawTextTyping(const struct Text* text, int32 x, int32 y, SDL_Color color)
-{
-	SDL_Surface* surface = TTF_RenderUNICODE_Solid(text->Font, text->String, color);
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(g_App.Renderer, surface);
-	SDL_Rect rect = { .x = x, .y = y };
-	SDL_QueryTexture(texture, NULL, NULL, &rect.w, &rect.h);
-	SDL_RenderCopy(g_App.Renderer, texture, NULL, &rect);
-
-	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
 }
 
 void Renderer_DrawTextShaded(const Text* text, int32 x, int32 y, SDL_Color foreground, SDL_Color background)
@@ -69,6 +59,7 @@ void Renderer_DrawTextShaded(const Text* text, int32 x, int32 y, SDL_Color foreg
 	SDL_RenderCopy(g_App.Renderer, texture, NULL, &rect);
 
 	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
 }
 
 void Renderer_DrawTextBlended(const Text* text, int x, int y, SDL_Color foreground)
@@ -80,10 +71,5 @@ void Renderer_DrawTextBlended(const Text* text, int x, int y, SDL_Color foregrou
 	SDL_RenderCopy(g_App.Renderer, texture, NULL, &rect);
 
 	SDL_FreeSurface(surface);
-}
-
-void Renderer_DrawRect(int32 x, int32 y, int32 w, int32 h)
-{
-	SDL_Rect rect = { .x = x, .y = y, .w = w, .h = h };
-	SDL_RenderDrawRect(g_App.Renderer, &rect);
+	SDL_DestroyTexture(texture);
 }
