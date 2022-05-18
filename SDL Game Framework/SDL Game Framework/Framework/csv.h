@@ -3,7 +3,7 @@
 #include "Type.h"
 #include <wchar.h>
 
-#define MAXIMUM_ROW 1000
+#define MAXIMUM_ROW 10000
 
 typedef struct CsvItem
 {

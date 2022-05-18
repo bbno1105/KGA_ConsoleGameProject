@@ -81,50 +81,54 @@ const wchar_t* str2[] = {
 
 typedef struct TitleSceneData
 {
-    Text    GuideLine[50][20]; //[id][ÁÙ¹Ù²Ş]
-    Text    GuideLineMovingPage[3][20]; //[¼±ÅÃÁö3°³][¼±ÅÃÁö±ÛÀÚ°³¼ö]
-    Text    ShadedSelect[3][20]; //[¼±ÅÃÁö3°³][¼±ÅÃÁö±ÛÀÚ°³¼ö]
+    Text    GuideLine[50]; //[id][ÁÙ¹Ù²Ş]
+    Text    GuideLineMovingPage[3]; //[¼±ÅÃÁö3°³][¼±ÅÃÁö±ÛÀÚ°³¼ö]
+    Text    ShadedSelect[3]; //[¼±ÅÃÁö3°³][¼±ÅÃÁö±ÛÀÚ°³¼ö]
     int32   FontSize;
     int32   RenderMode;
     int32   SelectNestScene;
     Image   BackGroundImage;
     int32   TextLine;
+    int32   TotalLine;
     int32   ID;
     int32	X;
     int32	Y;
     int32	Alpha;
+    Music   BGM;
+    float   Volume;
 } TitleSceneData;
 
 void init_title(void)
 {
-    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-    
     // ÀÌ´Ö Å¸ÀÌÆ² µ¥ÀÌÅÍ°¡ µé¾î°¥ °ø°£ ¸¸µé±â
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
-	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	wchar_t* testtext = ParseToUnicode(csvFile.Items[44][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
+    Audio_LoadMusic(&data->BGM, "powerful.mp3");
+    Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
 
-	for (int32 i = 0; i < 20; ++i)
-	{
-		wchar_t stringl[100] = L"";
-		testtext = StringLine(testtext, stringl); // ¿©±â¼­ ®c
-		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, stringl, wcslen(stringl));
-		if (*testtext == NULL) break;
-	}
 
     data->ID = 1;               // ID 1ºÎÅÍ ½ÃÀÛ
     data->TextLine = 0;         // ID¾ÈÀÇ ÅØ½ºÆ® ÁÙ 0ºÎÅÍ ½ÃÀÛ
     data->FontSize = 18;        // µ¥ÀÌÅÍ ÆùÆ® »çÀÌÁî ¼³Á¤
     data->RenderMode = SOLID;   // ·£´õ¸ğµå : ±ÛÀÚ¸¸ ³ª¿À°Ô
+    data->TotalLine = 0;
+    data->Volume = 1.0f;
 
-    // ID 1ºÎÅÍ ÅØ½ºÆ® 20ÁÙ±îÁö ÀÌ´Ö
+    wchar_t* testtext = ParseToUnicode(csvFile.Items[data->ID+1][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
+
     for (int32 i = 0; i < 20; ++i)
     {
-        Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
+        wchar_t stringl[500] = L"";
+        testtext = StringLine(testtext, stringl);
+        Text_CreateText(&data->GuideLine[i], "d2coding.ttf", data->FontSize, stringl, wcslen(stringl));
+        data->TotalLine++;
+        if (*testtext == NULL) break;
     }
+
+
 
     // ¼±ÅÃÁö 3ÁÙ ÀÌ´Ö
     for (int32 i = 0; i < 3; ++i)
@@ -167,11 +171,20 @@ void update_title(void)
     {
         data->ID++;         // ID ´ÙÀ½À¸·Î ³Ñ¾î°¨
         data->TextLine = 0; // ÅØ½ºÆ®ÁÙ 0ÃÊ±âÈ­
-        
+        data->TotalLine = 0;
+
+        wchar_t* testtext = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
+
         for (int32 i = 0; i < 20; ++i)
         {
-            Text_CreateText(&data->GuideLine[data->ID][i], "d2coding.ttf", data->FontSize, Data[GetCsvData(data->ID)].Text[i], wcslen(Data[GetCsvData(data->ID)].Text[i]));
+            wchar_t stringl[500] = L"";
+            testtext = StringLine(testtext, stringl);
+            Text_CreateText(&data->GuideLine[i], "d2coding.ttf", data->FontSize, stringl, wcslen(stringl));
+            data->TotalLine++;
+            if (*testtext == NULL) break;
         }
+
+        Audio_Play(&data->BGM, INFINITY_LOOP);
     }
 
     // ÅØ½ºÆ® ½ºÅµ
@@ -182,18 +195,18 @@ void update_title(void)
 
     // ¼±ÅÃÇÑºÎºĞ À½¿µ³Ö±â
     int SelectShadedIndex = 0;
-    &data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
-    if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
-    {
-        if (Input_GetKeyDown(VK_DOWN))
-        {
-            SelectShadedIndex++;
-        }
-        if (Input_GetKeyDown(VK_UP))
-        {
-            SelectShadedIndex--;
-        }
-    }
+    //&data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
+    //if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
+    //{
+    //    if (Input_GetKeyDown(VK_DOWN))
+    //    {
+    //        SelectShadedIndex++;
+    //    }
+    //    if (Input_GetKeyDown(VK_UP))
+    //    {
+    //        SelectShadedIndex--;
+    //    }
+    //}
 }
 
 void render_title(void)
@@ -203,14 +216,15 @@ void render_title(void)
     bool isFinishTextLine = false;
 
     // µ¨Å¸Å¸ÀÓÀÌ ´Ã¾î³²¿¡ µû¶ó ´Ã¾î³­ ÅØ½ºÆ® ÁÙ ¸¸Å­ Ãâ·Â
-    for (int32 i = 0; i < data->TextLine; i++)
+
+    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[data->ID][i], 100, 100 + 28 * i, color);
-        
+        Renderer_DrawTextSolid(&data->GuideLine[i], 100, 100 + 28 * i, color);
+
         // ÅØ½ºÆ® ÁÙ¿¡ ¾Æ¹«°Íµµ ¾ø´Â ÅØ½ºÆ® ÁÙÀÌ ¿¬¼ÓÀ¸·Î ³ª¿À¸é ¼±ÅÃÁö Ãâ·Â
-        if (&data->GuideLine[data->ID][i] == "" && &data->GuideLine[data->ID][i + 1] == "")
-            isFinishTextLine = true;
+        //if (&data->GuideLine[i] == "" && &data->GuideLine[i+1] == "")
+        //    isFinishTextLine = true;
     }
 
     // ÅØ½ºÆ® ÁÙ¿¡ ¾Æ¹«°Íµµ ¾ø´Â ÅØ½ºÆ® ÁÙÀÌ ¿¬¼ÓÀ¸·Î ³ª¿À¸é ¼±ÅÃÁö 3ÁÙ Ãâ·Â
@@ -264,9 +278,9 @@ void release_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    for (int32 i = 0; i < 10; ++i)
+    for (int32 i = 0; i < 50; ++i)
     {
-        Text_FreeText(&data->GuideLine[data->ID][i]);
+        Text_FreeText(&data->GuideLine[i]);
     }
     for (int32 i = 0; i < 3; ++i)
     {
@@ -276,6 +290,7 @@ void release_title(void)
     {
         Text_FreeText(&data->ShadedSelect[i]);
     }
+    Audio_FreeMusic(&data->BGM);
     SafeFree(g_Scene.Data);
 }
 #pragma endregion

@@ -28,7 +28,7 @@ int countCategory(const char* firstLine)
 	int result = 1;
 	while (*firstLine != '\n')
 	{
-		if (*firstLine == ',')
+		if (*firstLine == '@')
 		{
 			++result;
 		}
@@ -65,7 +65,7 @@ void CreateCsvFile(CsvFile* csvFile, const char* filename)
 				break;
 			}
 
-			if (*lineEnd == ',')
+			if (*lineEnd == '@')
 			{
 				++commaCount;
 			}
@@ -78,7 +78,7 @@ void CreateCsvFile(CsvFile* csvFile, const char* filename)
 		const char* recordEnd = recordStart;
 		for (int i = 0; i < csvFile->ColumnCount; ++i)
 		{
-			while (*recordEnd != ',' && recordEnd != lineEnd)
+			while (*recordEnd != '@' && recordEnd != lineEnd)
 			{
 				++recordEnd;
 			}
@@ -123,7 +123,7 @@ wchar_t* ParseToUnicode(const CsvItem item)
 void csv_Init(void)
 {
 	memset(&csvFile, 0, sizeof(CsvFile));
-	CreateCsvFile(&csvFile, "Data.csv");
+	CreateCsvFile(&csvFile, "Datas.csv");
 
 	// CSV 파일 파싱한 후 텍스트 그려본 다음 제대로 출력 안되면
 	// App_Init()에 아래 구문 추가
