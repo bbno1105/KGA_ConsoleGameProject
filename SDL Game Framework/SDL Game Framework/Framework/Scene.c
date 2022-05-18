@@ -194,7 +194,7 @@ void update_title(void)
     // 다음페이지 넘김
     if (Input_GetKeyDown(VK_SPACE) && data->TextLine >= data->TotalLine)
     {
-        data->ID++;         // ID 다음으로 넘어감
+        data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
         data->TextLine = 0; // 텍스트줄 0초기화
         data->TotalLine = 0; // 총 몇줄인지 체크
        
