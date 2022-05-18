@@ -80,6 +80,7 @@ typedef struct TitleSceneData
     int32   TotalLine;              // 총 몇줄인지 체크
     int32   FontSize;
     int32   RenderMode;
+    bool    isSelect[200][3];       // 선택한 선택지 표시를 위한 변수
 
     // 선택지관련
     int32	Pointer_X;
@@ -121,6 +122,7 @@ void init_title(void)
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
     data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
     data->TotalLine = 0;
+    memset(data->isSelect, false, sizeof(data->isSelect)); // 전부 false로 초기화
 
     // testtext에 Test_s 내용추가
     wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
@@ -152,27 +154,37 @@ void init_title(void)
 
     // [ 사운드 ]
     // BGM
-    strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
-    Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
+    strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+    Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_Play(&data->BGM, INFINITY_LOOP);
-    data->BGM_Volume = 0.5f;
+    data->BGM_Volume = 0.1f;
     Audio_SetVolume(data->BGM_Volume);
     // SE
-    Audio_LoadSoundEffect(&data->SE, "effect2.wav");
-    Audio_PlaySoundEffect(&data->SE, 1);
-    data->SE_Volume = 1.0f;
-    Audio_SetEffectVolume(&data->SE, data->SE_Volume);
+    if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+    {
+        Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+        if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+        {
+            Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+        }
+        else
+        {
+            Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+        }
+        data->SE_Volume = 1.0f;
+        Audio_SetEffectVolume(&data->SE, data->SE_Volume);
+    }
 
     // [ 이미지 ]
     Image_LoadImage(&data->BackGroundImage, "Background.jpg");
-    Image_LoadImage(&data->FrontImage, csvFile.Items[data->ID + 1][ImageFile_s].RawData);
+    Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
     data->X;
     data->Y;
     data->Alpha;
 
-    Audio_LoadMusic(&data->BGM, "powerful.mp3");
-    Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
+    //Audio_LoadMusic(&data->BGM, "powerful.mp3");
+    //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
 }
 
 void update_title(void)
@@ -192,13 +204,15 @@ void update_title(void)
         }
         elapsedTime = 0.0f; 
     }
-    Image_LoadImage(&data->FrontImage, csvFile.Items[data->ID + 1][ImageFile_s].RawData);
 
     // 다음페이지 넘김
     if (Input_GetKeyDown(VK_SPACE) && data->TextLine >= data->TotalLine)
     {
+        Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
+        data->isSelect[data->ID][data->SelectId] = true;
         data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
+        data->SelectId = 0; // 선택한 선택지 0으로 초기화
         data->TextLine = 0; // 텍스트줄 0초기화
         data->TotalLine = 0; // 총 몇줄인지 체크
        
@@ -226,24 +240,48 @@ void update_title(void)
         data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
             
         // [ 사운드 ]
-        if (strcmp(&data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData))
+        if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
         {
-            strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
-            Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
+            strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+            Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
             Audio_Play(&data->BGM, INFINITY_LOOP);
         }
-        Audio_LoadSoundEffect(&data->SE, "effect2.wav");
-        Audio_PlaySoundEffect(&data->SE, 1);
+        Audio_StopSoundEffect();
+        if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+        {
+            Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+            if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+            {
+                Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+            }
+            else 
+            {
+                Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+            }
+        }
+        LogInfo("Now ID Loading... %d", data->ID);
+    }
+
+    int selectIDCount = 0;
+    for (int i = 1; i < 3; i++)
+    {
+        if (data->SelectMovingPage[i] > 0)
+        {
+            selectIDCount++;
+        }
     }
 
     // [ 선택지 ]
     if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
     {
         data->SelectId--;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+
     }
-    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < 2)
+    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < selectIDCount)
     {
         data->SelectId++;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
     }
     
     // 텍스트 스킵
@@ -268,10 +306,40 @@ void render_title(void)
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
     if (data->TextLine >= data->TotalLine)
     {
-        SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
-        Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
-        Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
+        if (data->isSelect[data->ID][0])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
+        }
+        
+
+        if (data->isSelect[data->ID][1])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
+        }
+        
+
+        if (data->isSelect[data->ID][2])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
+        }
     }
   
     // [ 이미지 ]
@@ -312,7 +380,7 @@ void release_title(void)
 #pragma region 참고용
 
 // #################################################### 참고용 데이터 ####################################################
-
+/*
 #pragma region MainScene
 #define GUIDELINE_COUNT 8
 
@@ -598,7 +666,7 @@ void release_main(void)
 //}
 //
 //#pragma endregion
-
+*/
 // ###################################################################################################################
 
 #pragma endregion
@@ -647,12 +715,12 @@ void Scene_Change(void)
         g_Scene.Render = render_title;
         g_Scene.Release = release_title;
         break;
-    case SCENE_MAIN:
-        g_Scene.Init = init_main;
-        g_Scene.Update = update_main;
-        g_Scene.Render = render_main;
-        g_Scene.Release = release_main;
-        break;
+    //case SCENE_MAIN:
+    //    g_Scene.Init = init_main;
+    //    g_Scene.Update = update_main;
+    //    g_Scene.Render = render_main;
+    //    g_Scene.Release = release_main;
+    //    break;
     }
 
     g_Scene.Init();

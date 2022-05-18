@@ -20,7 +20,7 @@ bool Audio_Init(void)
 		return false;
 	}
 
-	Audio_SetVolume(0.5f);
+	Audio_SetVolume(0.1f);
 
 	return true;
 }
