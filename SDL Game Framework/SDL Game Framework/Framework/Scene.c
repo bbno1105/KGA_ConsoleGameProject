@@ -68,7 +68,11 @@ void release_start(void)
 #pragma endregion
 
 #pragma region TitleScene
-
+const wchar_t* str2[] = {
+    L"▶ 선택지 1",
+    L"▶ 선택지 2",
+    L"▶ 선택지 3"
+};
 
 typedef struct TitleSceneData
 {
@@ -118,7 +122,7 @@ void init_title(void)
     data->TotalLine = 0;
 
 
-    // [ 사운드 설정 ]
+    // [ 사운드 관련 ]
     // BGM
     strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
     Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
@@ -131,9 +135,13 @@ void init_title(void)
     data->SE_Volume = 1.0f;
     Audio_SetEffectVolume(&data->SE, data->SE_Volume);
 
+    data->ID = 1;               // ID 1부터 시작
+    data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
+    data->FontSize = 18;        // 데이터 폰트 사이즈 설정
+    data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
+    data->TotalLine = 0;
     data->isFinishTextLine = false;
 
-   
     // testtext에 Test_s 내용추가
     wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
@@ -150,7 +158,6 @@ void init_title(void)
             break; // 토탈라인 플러스 되는거 멈춤
         }
     }
-    // 여기까지
 
     // 선택지 3줄 이닛
     if (true)
@@ -178,7 +185,7 @@ void update_title(void)
     static float elapsedTime;
     elapsedTime += Timer_GetDeltaTime();
 
-    // 시간이 프르면 텍스트 줄 값++
+    // 시간이 증가하면 텍스트 줄 값++
     if (elapsedTime >= 1.0f)
     {
         if (data->TextLine < 20)
@@ -196,7 +203,7 @@ void update_title(void)
         data->TotalLine = 0; // 총 몇줄인지 체크
         data->isFinishTextLine = false; // 줄 끝났는지 체크
         
-        // testtext에 Test_s 내용추가
+        // [ 텍스트 ]
         wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
         for (int32 i = 0; i < 20; ++i)
@@ -213,7 +220,7 @@ void update_title(void)
             }
         }
 
-        // 선택지 출력
+        // [ 선택지 ]
         if (true)
         {
             Text_CreateText(&data->GuideLineMovingPage[0], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
@@ -221,7 +228,7 @@ void update_title(void)
             Text_CreateText(&data->GuideLineMovingPage[2], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
         }
 
-        // [ 사운드 설정 ]
+        // [ 사운드 ]
         if (strcmp(&data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData))
         {
             strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
@@ -230,8 +237,6 @@ void update_title(void)
         }
         Audio_LoadSoundEffect(&data->SE, "effect2.wav");
         Audio_PlaySoundEffect(&data->SE, 1);
-
-
     }
 
     // 텍스트 스킵
@@ -240,23 +245,6 @@ void update_title(void)
         data->TextLine = 20;
         data->isFinishTextLine = true;
     }
-
-    
-
-    //// 선택한부분 음영넣기
-    //int SelectShadedIndex = 0;
-    //&data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
-    //if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
-    //{
-    //    if (Input_GetKeyDown(VK_DOWN))
-    //    {
-    //        SelectShadedIndex++;
-    //    }
-    //    if (Input_GetKeyDown(VK_UP))
-    //    {
-    //        SelectShadedIndex--;
-    //    }
-    //}
 }
 
 void render_title(void)
@@ -264,6 +252,7 @@ void render_title(void)
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
 
+    // [ 텍스트 ]
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
     {
@@ -271,6 +260,7 @@ void render_title(void)
         Renderer_DrawTextSolid(&data->GuideLine[i], 150, 130 + 40 * i, color);
     }
 
+    // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
     if (true)
     {
@@ -279,65 +269,43 @@ void render_title(void)
         Renderer_DrawTextSolid(&data->GuideLineMovingPage[1], 150, 870, color);
         Renderer_DrawTextSolid(&data->GuideLineMovingPage[2], 150, 910, color);
     }
-    
-    //// 선택된 곳 셰이드 출력
-    //SDL_Color bg = { .a = 255 };
-    //SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
-    //Renderer_DrawTextShaded(&data->ShadedSelect, 400, 400, fg, bg);
-    
-
+  
+    // [ 이미지 ]
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
     Image_SetAlphaValue(&data->BackGroundImage, 125);
 
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-
-    //switch (data->RenderMode)
-    //{
-    //case SOLID:
-    //{
-    //    SDL_Color color = { .a = 255 };
-    //    Renderer_DrawTextSolid(&data->GuideLineMovingPage, 400, 400, color);
-    //}
-    //break;
-    //case SHADED:
-    //{
-    //    SDL_Color bg = { .a = 255 };
-    //    SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
-    //    Renderer_DrawTextShaded(&data->GuideLineMovingPage, 400, 400, fg, bg);
-    //}
-    //break;
-    //case BLENDED:
-    //{
-    //    //Renderer_DrawImage(&data->TestImage, 400, 400);
-    //    SDL_Color color = { .r = 255, .g = 255, .b = 255, .a = 255 };
-    //    Renderer_DrawTextBlended(&data->GuideLineMovingPage, 400, 400, color);
-    //}
-    //break;
-    //}
 }
 
 void release_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
+    // [ 텍스트 ]
     for (int32 i = 0; i < 50; ++i)
     {
         Text_FreeText(&data->GuideLine[i]);
     }
+
+    // [ 선택지 ]
     for (int32 i = 0; i < 3; ++i)
     {
         Text_FreeText(&data->GuideLineMovingPage[i]);
     }
-
-
-    // [ 사운드 설정 ]
+ 
+    // [ 사운드 ]
     Audio_FreeMusic(&data->BGM);
     Audio_FreeSoundEffect(&data->SE);
 
     SafeFree(g_Scene.Data);
 }
 #pragma endregion
+
+
+#pragma region 참고용
+
+// #################################################### 참고용 데이터 ####################################################
 
 #pragma region MainScene
 #define GUIDELINE_COUNT 8
@@ -629,6 +597,11 @@ void release_main(void)
 //}
 //
 //#pragma endregion
+
+// ###################################################################################################################
+
+#pragma endregion
+
 
 bool Scene_IsSetNextScene(void)
 {
