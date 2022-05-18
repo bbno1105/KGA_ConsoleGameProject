@@ -6,7 +6,7 @@
 Scene g_Scene;
 
 static ESceneType s_nextScene = SCENE_NULL;
-//asdf
+
 #pragma region START
 
 #define SOLID 0
@@ -68,11 +68,6 @@ void release_start(void)
 #pragma endregion
 
 #pragma region TitleScene
-const wchar_t* str2[] = {
-    L"▶ 선택지 1",
-    L"▶ 선택지 2",
-    L"▶ 선택지 3"
-};
 
 typedef struct TitleSceneData
 {
@@ -81,9 +76,7 @@ typedef struct TitleSceneData
 
     // 텍스트 관련
     Text    GuideLine[50];          // [id][줄바꿈]
-    Text    GuideLineMovingPage[3]; // [선택지3개][선택지글자개수]
     int32   TextLine;               // 텍스트 줄
-    bool    isFinishTextLine;       // 줄 끝났는지 체크
     int32   TotalLine;              // 총 몇줄인지 체크
     int32   FontSize;
     int32   RenderMode;
@@ -91,7 +84,9 @@ typedef struct TitleSceneData
     // 선택지관련
     int32	Pointer_X;
     int32	Pointer_Y;
-    int32   SelectNextScene; // 씬 전환값
+    Text    SelectText[3];       // [선택지3개][선택지글자개수]
+    int32   SelectId;            // 씬 인덱스
+    int32   SelectMovingPage[3]; // 씬 전환값
 
     // 이미지관련
     Image   BackGroundImage;
@@ -105,10 +100,12 @@ typedef struct TitleSceneData
     float   BGM_Volume;
     SoundEffect   SE;
     float   SE_Volume;
+
 } TitleSceneData;
 
 void init_title(void)
-{
+{ 
+    // [ 공통 ]
     // 이닛 타이틀 데이터가 들어갈 공간 만들기
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
@@ -116,13 +113,43 @@ void init_title(void)
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
     data->ID = 1;               // ID 1부터 시작
+
+
+    // [ 텍스트 ]
     data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
     data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
     data->TotalLine = 0;
 
+    // testtext에 Test_s 내용추가
+    wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
-    // [ 사운드 관련 ]
+    for (int32 i = 0; i < 20; ++i)
+    {
+        wchar_t stringl[500] = L""; //텍스트 줄 저장
+        IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
+        Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
+        data->TotalLine++;
+        
+        if (*IdText == NULL)
+        {
+            break; // 토탈라인 플러스 되는거 멈춤
+        }
+    }
+
+
+    // [ 선택지 ]
+    data->SelectId = 0;
+    // SelectText 1, 2, 3에 각각의 cvs select1, 2, 3 문자열 넣음
+    Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
+    Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
+    Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
+    // SelectMovingPage 1, 2, 3에 각각의 cvs [MovingPage 1, 2, 3 문자열 넣음
+    data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+    data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+    data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
+
+    // [ 사운드 ]
     // BGM
     strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
     Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
@@ -135,39 +162,8 @@ void init_title(void)
     data->SE_Volume = 1.0f;
     Audio_SetEffectVolume(&data->SE, data->SE_Volume);
 
-    data->ID = 1;               // ID 1부터 시작
-    data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
-    data->FontSize = 18;        // 데이터 폰트 사이즈 설정
-    data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
-    data->TotalLine = 0;
-    data->isFinishTextLine = false;
-
-    // testtext에 Test_s 내용추가
-    wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
-
-    for (int32 i = 0; i < 20; ++i)
-    {
-        wchar_t stringl[500] = L""; //텍스트 줄 저장
-        IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
-        Text_CreateText(&data->GuideLine[i], "d2coding.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
-        data->TotalLine++;
-        
-        if (*IdText == NULL)
-        {
-            data->isFinishTextLine = true;
-            break; // 토탈라인 플러스 되는거 멈춤
-        }
-    }
-
-    // 선택지 3줄 이닛
-    if (true)
-    {
-        Text_CreateText(&data->GuideLineMovingPage[0], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
-        Text_CreateText(&data->GuideLineMovingPage[1], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
-        Text_CreateText(&data->GuideLineMovingPage[2], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));        
-    }
-
-    Image_LoadImage(&data->BackGroundImage, "Scene1Background.png");
+    // [ 이미지 ]
+    Image_LoadImage(&data->BackGroundImage, "Background.jpg");
 
     data->X;
     data->Y;
@@ -196,38 +192,35 @@ void update_title(void)
     }
 
     // 다음페이지 넘김
-    if (Input_GetKeyDown(VK_SPACE))
+    if (Input_GetKeyDown(VK_SPACE) && data->TextLine >= data->TotalLine)
     {
         data->ID++;         // ID 다음으로 넘어감
         data->TextLine = 0; // 텍스트줄 0초기화
         data->TotalLine = 0; // 총 몇줄인지 체크
-        data->isFinishTextLine = false; // 줄 끝났는지 체크
-        
-        // [ 텍스트 ]
+       
         wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
         for (int32 i = 0; i < 20; ++i)
         {
             wchar_t stringl[500] = L""; //텍스트 줄 저장
             IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
-            Text_CreateText(&data->GuideLine[i], "d2coding.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
+            Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
             data->TotalLine++;
 
             if (*IdText == NULL)
             {
-                data->isFinishTextLine = true;
                 break; // 토탈라인 플러스 되는거 멈춤
             }
         }
 
         // [ 선택지 ]
-        if (true)
-        {
-            Text_CreateText(&data->GuideLineMovingPage[0], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
-            Text_CreateText(&data->GuideLineMovingPage[1], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
-            Text_CreateText(&data->GuideLineMovingPage[2], "d2coding.ttf", 16, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
-        }
-
+        Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
+        Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
+        Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
+        data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+        data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+        data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
+            
         // [ 사운드 ]
         if (strcmp(&data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData))
         {
@@ -239,35 +232,42 @@ void update_title(void)
         Audio_PlaySoundEffect(&data->SE, 1);
     }
 
+    // [ 선택지 ]
+    if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
+    {
+        data->SelectId--;
+    }
+    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < 2)
+    {
+        data->SelectId++;
+    }
+    
     // 텍스트 스킵
     if (Input_GetKeyDown(VK_RIGHT))
     {
         data->TextLine = 20;
-        data->isFinishTextLine = true;
     }
 }
 
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-
-
     // [ 텍스트 ]
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[i], 150, 130 + 40 * i, color);
+        Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
     }
 
     // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
-    if (true)
+    if (data->TextLine >= data->TotalLine)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLineMovingPage[0], 150, 830, color);
-        Renderer_DrawTextSolid(&data->GuideLineMovingPage[1], 150, 870, color);
-        Renderer_DrawTextSolid(&data->GuideLineMovingPage[2], 150, 910, color);
+        Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
+        Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
+        Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
     }
   
     // [ 이미지 ]
@@ -291,7 +291,7 @@ void release_title(void)
     // [ 선택지 ]
     for (int32 i = 0; i < 3; ++i)
     {
-        Text_FreeText(&data->GuideLineMovingPage[i]);
+        Text_FreeText(&data->SelectText[i]);
     }
  
     // [ 사운드 ]
@@ -341,11 +341,6 @@ void init_main(void)
     memset(g_Scene.Data, 0, sizeof(MainSceneData));
 
     MainSceneData* data = (MainSceneData*)g_Scene.Data;
-
-    for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-    {
-        Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, str2[i], wcslen(str2[i]));
-    }
 
     Image_LoadImage(&data->Front, "main.png");
 
@@ -531,7 +526,7 @@ void release_main(void)
 //
 //
 //    data->FontSize = 50;
-//    Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
+//    Text_CreateText(&data->TestText, "HeirofLightBold.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
 //
 //    data->RenderMode = SOLID;
 //
