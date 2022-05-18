@@ -66,7 +66,7 @@ void release_start(void)
 }
 
 #pragma endregion
-
+//dsfg
 #pragma region TitleScene
 
 const wchar_t* str1[] = {
