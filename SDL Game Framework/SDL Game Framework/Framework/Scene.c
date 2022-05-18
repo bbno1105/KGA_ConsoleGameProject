@@ -95,7 +95,10 @@ typedef struct TitleSceneData
     int32	Y;
     int32	Alpha;
     Music   BGM;
-    float   Volume;
+    char    NowBGM[20];
+    float   BGM_Volume;
+    SoundEffect   SE;
+    float   SE_Volume;
 } TitleSceneData;
 
 void init_title(void)
@@ -106,17 +109,28 @@ void init_title(void)
 
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    Audio_LoadMusic(&data->BGM, "powerful.mp3");
-    Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
-
-
     data->ID = 1;               // ID 1부터 시작
     data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
     data->RenderMode = SOLID;   // 랜더모드 : 글자만 나오게
     data->TotalLine = 0;
-    data->Volume = 1.0f;
 
+
+    // [ 사운드 설정 ]
+    // BGM
+    strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
+    Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
+    Audio_Play(&data->BGM, INFINITY_LOOP);
+    data->BGM_Volume = 0.5f;
+    Audio_SetVolume(data->BGM_Volume);
+    // SE
+    Audio_LoadSoundEffect(&data->SE, "effect2.wav");
+    Audio_PlaySoundEffect(&data->SE, 1);
+    data->SE_Volume = 1.0f;
+    Audio_SetEffectVolume(&data->SE, data->SE_Volume);
+
+
+    // TODO : 나중에 함수로 뺄 수 있는지 생각하기
     wchar_t* testtext = ParseToUnicode(csvFile.Items[data->ID+1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
     for (int32 i = 0; i < 20; ++i)
@@ -127,8 +141,7 @@ void init_title(void)
         data->TotalLine++;
         if (*testtext == NULL) break;
     }
-
-
+    // 여기까지
 
     // 선택지 3줄 이닛
     for (int32 i = 0; i < 3; ++i)
@@ -170,11 +183,11 @@ void update_title(void)
     if (Input_GetKeyDown(VK_SPACE))
     {
         data->ID++;         // ID 다음으로 넘어감
+
+        // [ 텍스트 출력 ]
         data->TextLine = 0; // 텍스트줄 0초기화
-        data->TotalLine = 0;
-
+        data->TotalLine = 0; // 총 몇 줄 있는지 카운트
         wchar_t* testtext = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
-
         for (int32 i = 0; i < 20; ++i)
         {
             wchar_t stringl[500] = L"";
@@ -184,7 +197,17 @@ void update_title(void)
             if (*testtext == NULL) break;
         }
 
-        Audio_Play(&data->BGM, INFINITY_LOOP);
+        // [ 사운드 설정 ]
+        if (strcmp(&data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData))
+        {
+            strcpy(data->NowBGM, csvFile.Items[data->ID + 1][BGM].RawData);
+            Audio_LoadMusic(&data->BGM, csvFile.Items[data->ID + 1][BGM].RawData);
+            Audio_Play(&data->BGM, INFINITY_LOOP);
+        }
+        Audio_LoadSoundEffect(&data->SE, "effect2.wav");
+        Audio_PlaySoundEffect(&data->SE, 1);
+
+
     }
 
     // 텍스트 스킵
@@ -290,7 +313,11 @@ void release_title(void)
     {
         Text_FreeText(&data->ShadedSelect[i]);
     }
+
+    // [ 사운드 설정 ]
     Audio_FreeMusic(&data->BGM);
+    Audio_FreeSoundEffect(&data->SE);
+
     SafeFree(g_Scene.Data);
 }
 #pragma endregion

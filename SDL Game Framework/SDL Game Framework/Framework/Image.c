@@ -43,3 +43,5 @@ void Image_SetAlphaValue(Image* image, uint8 alpha)
 {
 	SDL_SetTextureAlphaMod(image->Texture, alpha);
 }
+
+// 이미지 기능

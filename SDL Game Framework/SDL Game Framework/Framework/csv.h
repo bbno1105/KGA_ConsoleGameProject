@@ -32,12 +32,14 @@ enum column
 	ID_i,
 	ScenePage_s,
 	Text_s,
-	Selet1_s,
+	Select1_s,
 	MovingPage1_i,
-	Selet2_s,
+	Select2_s,
 	MovingPage2_i,
-	Selet3_s,
+	Select3_s,
 	MovingPage3_i,
-	SoundFile_s,
+	BGM,
+	SE,
+	SE_loop,
 	ImageFile_s
 };

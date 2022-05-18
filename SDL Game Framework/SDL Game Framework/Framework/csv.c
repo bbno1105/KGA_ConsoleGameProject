@@ -123,7 +123,7 @@ wchar_t* ParseToUnicode(const CsvItem item)
 void csv_Init(void)
 {
 	memset(&csvFile, 0, sizeof(CsvFile));
-	CreateCsvFile(&csvFile, "Datas.csv");
+	CreateCsvFile(&csvFile, "Data.csv");
 
 	// CSV 파일 파싱한 후 텍스트 그려본 다음 제대로 출력 안되면
 	// App_Init()에 아래 구문 추가
