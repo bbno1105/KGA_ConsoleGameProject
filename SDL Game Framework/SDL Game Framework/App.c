@@ -92,7 +92,7 @@ int32 App_Run(void)
 	Scene_SetNextScene(SCENE_START);
 
 	SDL_Event event;
-	while (true)
+ 	while (true)
 	{
 		if (SDL_PollEvent(&event))
 		{
