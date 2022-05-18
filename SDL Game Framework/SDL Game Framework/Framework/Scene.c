@@ -205,31 +205,39 @@ void update_title(void)
         elapsedTime = 0.0f; 
     }
 
-    // 다음페이지 넘김
-    if (Input_GetKeyDown(VK_SPACE) && data->TextLine >= data->TotalLine)
+
+    // 다음페이지 넘김 or 텍스트 스킵
+    if (Input_GetKeyDown(VK_SPACE))
     {
-        Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
-
-        data->isSelect[data->ID][data->SelectId] = true;
-        data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
-        data->SelectId = 0; // 선택한 선택지 0으로 초기화
-        data->TextLine = 0; // 텍스트줄 0초기화
-        data->TotalLine = 0; // 총 몇줄인지 체크
-       
-        wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
-
-        for (int32 i = 0; i < 20; ++i)
+        if(data->TextLine < data->TotalLine)
         {
-            wchar_t stringl[500] = L""; //텍스트 줄 저장
-            IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
-            Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
-            data->TotalLine++;
-
-            if (*IdText == NULL)
-            {
-                break; // 토탈라인 플러스 되는거 멈춤
-            }
+            data->TextLine = data->TotalLine;
         }
+        else
+        {
+            Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
+
+            data->isSelect[data->ID][data->SelectId] = true;
+            data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
+            data->SelectId = 0; // 선택한 선택지 0으로 초기화
+            data->TextLine = 0; // 텍스트줄 0초기화
+            data->TotalLine = 0; // 총 몇줄인지 체크
+       
+            wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
+
+            for (int32 i = 0; i < 20; ++i)
+            {
+                wchar_t stringl[500] = L""; //텍스트 줄 저장
+                IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
+                Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
+                data->TotalLine++;
+
+                if (*IdText == NULL)
+                {
+                    break; // 토탈라인 플러스 되는거 멈춤
+                }
+        }
+    }
 
         // [ 선택지 ]
         Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
@@ -262,6 +270,10 @@ void update_title(void)
         LogInfo("Now ID Loading... %d", data->ID);
     }
 
+
+
+
+    // [ 선택지 ]
     int selectIDCount = 0;
     for (int i = 1; i < 3; i++)
     {
@@ -271,7 +283,6 @@ void update_title(void)
         }
     }
 
-    // [ 선택지 ]
     if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
     {
         data->SelectId--;
@@ -284,11 +295,7 @@ void update_title(void)
         LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
     }
     
-    // 텍스트 스킵
-    if (Input_GetKeyDown(VK_RIGHT))
-    {
-        data->TextLine = 20;
-    }
+
 }
 
 void render_title(void)
