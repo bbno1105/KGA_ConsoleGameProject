@@ -6,7 +6,7 @@
 Scene g_Scene;
 
 static ESceneType s_nextScene = SCENE_NULL;
-
+//asdf
 #pragma region START
 
 #define SOLID 0
