@@ -163,7 +163,7 @@ void update_title(void)
         {
             data->TextLine++;
         }
-        elapsedTime = 0.0f;
+        elapsedTime = 0.0f; 
     }
 
     // 다음페이지 넘김
