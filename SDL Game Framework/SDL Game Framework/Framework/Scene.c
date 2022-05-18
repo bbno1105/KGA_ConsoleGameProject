@@ -97,12 +97,12 @@ typedef struct TitleSceneData
 
 void init_title(void)
 {
-    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
     
     // 이닛 타이틀 데이터가 들어갈 공간 만들기
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
+<<<<<<< HEAD
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
 	wchar_t* testtext = ParseToUnicode(csvFile.Items[44][Text_s]); // csvFile.Items[ID+1][컬럼명]
@@ -114,6 +114,9 @@ void init_title(void)
 		Text_CreateText(&data->GuideLine[i], "d2coding.ttf", 16, stringl, wcslen(stringl));
 		if (*testtext == NULL) break;
 	}
+=======
+    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+>>>>>>> Text_test
 
     data->ID = 1;               // ID 1부터 시작
     data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
@@ -182,7 +185,7 @@ void update_title(void)
 
     // 선택한부분 음영넣기
     int SelectShadedIndex = 0;
-    &data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
+    //&data->ShadedSelect[SelectShadedIndex] = str2[SelectShadedIndex];
     if (0 <= SelectShadedIndex && SelectShadedIndex <= 3)
     {
         if (Input_GetKeyDown(VK_DOWN))
