@@ -90,6 +90,7 @@ typedef struct TitleSceneData
 
     // 이미지관련
     Image   BackGroundImage;
+    Image   FrontImage;
     int32	X;
     int32	Y;
     int32	Alpha;
@@ -164,6 +165,7 @@ void init_title(void)
 
     // [ 이미지 ]
     Image_LoadImage(&data->BackGroundImage, "Background.jpg");
+    Image_LoadImage(&data->FrontImage, csvFile.Items[data->ID + 1][ImageFile_s].RawData);
 
     data->X;
     data->Y;
@@ -190,10 +192,12 @@ void update_title(void)
         }
         elapsedTime = 0.0f; 
     }
+    Image_LoadImage(&data->FrontImage, csvFile.Items[data->ID + 1][ImageFile_s].RawData);
 
     // 다음페이지 넘김
     if (Input_GetKeyDown(VK_SPACE) && data->TextLine >= data->TotalLine)
     {
+
         data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
         data->TextLine = 0; // 텍스트줄 0초기화
         data->TotalLine = 0; // 총 몇줄인지 체크
@@ -273,9 +277,11 @@ void render_title(void)
     // [ 이미지 ]
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->FrontImage, 255);
     Image_SetAlphaValue(&data->BackGroundImage, 125);
 
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    Renderer_DrawImage(&data->FrontImage, 1100, 200);
 }
 
 void release_title(void)
