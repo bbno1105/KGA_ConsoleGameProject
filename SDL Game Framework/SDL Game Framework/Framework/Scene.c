@@ -159,7 +159,7 @@ void init_title(void)
     strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_Play(&data->BGM, INFINITY_LOOP);
-    data->BGM_Volume = 0.5f;
+    data->BGM_Volume = 1.0f;
     Audio_SetVolume(data->BGM_Volume);
     // SE
     if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
@@ -307,8 +307,16 @@ void render_title(void)
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
     {
-        SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
+        {
+            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+        else 
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
+            Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
     }
 
     // [ 선택지 ]
@@ -333,7 +341,7 @@ void render_title(void)
             }
 		}        
 
-        data->Icon.Width = 40;
+        data->Icon.Width = 30;
         data->Icon.Height = 30;
         Image_SetAlphaValue(&data->Icon, 255);
         Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
