@@ -217,7 +217,6 @@ void update_title(void)
         }
         else
         {
-            Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
             data->MovingPageSelected[data->ID][data->SelectId] = true;
             data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
@@ -227,6 +226,7 @@ void update_title(void)
             data->Icon_X = 170;
             data->Icon_Y = 855;
 
+            Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
             wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
