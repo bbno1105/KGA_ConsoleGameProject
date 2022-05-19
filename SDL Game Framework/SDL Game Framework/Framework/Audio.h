@@ -119,7 +119,7 @@ EMusicFading Audio_IsMusicFading(void);
 
 typedef struct SoundEffect
 {
-	Mix_Chunk* Chunk;
+	Mix_Chunk*	Chunk;
 	float		Volume;
 } SoundEffect;
 

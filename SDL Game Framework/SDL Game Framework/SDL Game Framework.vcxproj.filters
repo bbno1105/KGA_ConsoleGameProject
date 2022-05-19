@@ -43,7 +43,7 @@
     <ClCompile Include="Framework\Text.c">
       <Filter>Framework</Filter>
     </ClCompile>
-    <ClCompile Include="Framework\csv.c">
+    <ClCompile Include="Framework\CsvParser.c">
       <Filter>Framework</Filter>
     </ClCompile>
   </ItemGroup>
@@ -82,7 +82,7 @@
     <ClInclude Include="Framework\Text.h">
       <Filter>Framework</Filter>
     </ClInclude>
-    <ClInclude Include="Framework\csv.h">
+    <ClInclude Include="Framework\CsvParser.h">
       <Filter>Framework</Filter>
     </ClInclude>
   </ItemGroup>

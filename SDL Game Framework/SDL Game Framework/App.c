@@ -38,7 +38,7 @@ bool App_Init(void)
 	}
 
 	Random_Init();
-	csv_Init();
+	CsvParse_Init();
 
 	if (false == Audio_Init())
 	{
@@ -92,7 +92,7 @@ int32 App_Run(void)
 	Scene_SetNextScene(SCENE_START);
 
 	SDL_Event event;
- 	while (true)
+	while (true)
 	{
 		if (SDL_PollEvent(&event))
 		{
@@ -111,13 +111,11 @@ int32 App_Run(void)
 			if (Timer_Update())
 			{
 				processInput();
-  				update();
+				update();
 				render();
 			}
 		}
 	}
-
-	g_Scene.Release();
 
 
 	return 0;

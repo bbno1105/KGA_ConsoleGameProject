@@ -1,4 +1,4 @@
-ï»¿#include "stdafx.h"
+#include "stdafx.h"
 #include "Scene.h"
 
 #include "Framework.h"
@@ -71,33 +71,34 @@ void release_start(void)
 
 typedef struct TitleSceneData
 {
-    // ëª¨ë‘ ê´€ë ¨
+    // ¸ğµÎ °ü·Ã
     int32   ID;
 
-    // í…ìŠ¤íŠ¸ ê´€ë ¨
-    Text    GuideLine[50];          // [id][ì¤„ë°”ê¿ˆ]
-    int32   TextLine;               // í…ìŠ¤íŠ¸ ì¤„
-    int32   TotalLine;              // ì´ ëª‡ì¤„ì¸ì§€ ì²´í¬
+    // ÅØ½ºÆ® °ü·Ã
+    Text    GuideLine[50];          // [id][ÁÙ¹Ù²Ş]
+    int32   TextLine;               // ÅØ½ºÆ® ÁÙ
+    int32   TotalLine;              // ÃÑ ¸îÁÙÀÎÁö Ã¼Å©
     int32   FontSize;
     int32   RenderMode;
+    bool    isSelect[200][3];       // ¼±ÅÃÇÑ ¼±ÅÃÁö Ç¥½Ã¸¦ À§ÇÑ º¯¼ö
+    bool    TextStrong;
 
-    // ì„ íƒì§€ê´€ë ¨
+    // ¼±ÅÃÁö°ü·Ã
     int32	Pointer_X;
     int32	Pointer_Y;
-    Text    SelectText[3];       // [ì„ íƒì§€3ê°œ][ì„ íƒì§€ê¸€ìê°œìˆ˜]
-    int32   SelectId;            // ì”¬ ì¸ë±ìŠ¤
-    int32   SelectMovingPage[3]; // ì”¬ ì „í™˜ê°’
-    bool    MovingPageSelected[200][3];   // ì„ íƒì§€ ì„ íƒì—¬ë¶€ë¥¼ ìœ„í•œ ë³€ìˆ˜
-    int32   selectIDCount;
+    Text    SelectText[3];       // [¼±ÅÃÁö3°³][¼±ÅÃÁö±ÛÀÚ°³¼ö]
+    int32   SelectId;            // ¾À ÀÎµ¦½º
+    int32   SelectMovingPage[3]; // ¾À ÀüÈ¯°ª
 
-    // ì´ë¯¸ì§€ê´€ë ¨
+    // ÀÌ¹ÌÁö°ü·Ã
     Image   BackGroundImage;
     Image   FrontImage;
+    Image   Icon;
     int32	X;
     int32	Y;
     int32	Alpha;
 
-    // ì‚¬ìš´ë“œê´€ë ¨
+    // »ç¿îµå°ü·Ã
     Music   BGM;
     char    NowBGM[20];
     float   BGM_Volume;
@@ -108,52 +109,52 @@ typedef struct TitleSceneData
 
 void init_title(void)
 { 
-    // [ ê³µí†µ ]
-    // ì´ë‹› íƒ€ì´í‹€ ë°ì´í„°ê°€ ë“¤ì–´ê°ˆ ê³µê°„ ë§Œë“¤ê¸°
+    // [ °øÅë ]
+    // ÀÌ´Ö Å¸ÀÌÆ² µ¥ÀÌÅÍ°¡ µé¾î°¥ °ø°£ ¸¸µé±â
     g_Scene.Data = malloc(sizeof(TitleSceneData));
     memset(g_Scene.Data, 0, sizeof(TitleSceneData));
 
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    data->ID = 1;               // ID 1ë¶€í„° ì‹œì‘
+    data->ID = 1;               // ID 1ºÎÅÍ ½ÃÀÛ
 
 
-    // [ í…ìŠ¤íŠ¸ ]
-    data->TextLine = 0;         // IDì•ˆì˜ í…ìŠ¤íŠ¸ ì¤„ 0ë¶€í„° ì‹œì‘
-    data->FontSize = 18;        // ë°ì´í„° í°íŠ¸ ì‚¬ì´ì¦ˆ ì„¤ì •
-    data->RenderMode = SOLID;   // ëœë”ë³´ë“œ : ê¸€ìë§Œ ë‚˜ì˜¤ê²Œ
+    // [ ÅØ½ºÆ® ]
+    data->TextLine = 0;         // ID¾ÈÀÇ ÅØ½ºÆ® ÁÙ 0ºÎÅÍ ½ÃÀÛ
+    data->FontSize = 18;        // µ¥ÀÌÅÍ ÆùÆ® »çÀÌÁî ¼³Á¤
+    data->RenderMode = SOLID;   // ·£´õº¸µå : ±ÛÀÚ¸¸ ³ª¿À°Ô
     data->TotalLine = 0;
-    memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // ì „ë¶€ falseë¡œ ì´ˆê¸°í™”
+    memset(data->isSelect, false, sizeof(data->isSelect)); // ÀüºÎ false·Î ÃÊ±âÈ­
 
-    // testtextì— Test_s ë‚´ìš©ì¶”ê°€
-    wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][ì»¬ëŸ¼ëª…]
+    // testtext¿¡ Test_s ³»¿ëÃß°¡
+    wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
 
     for (int32 i = 0; i < 20; ++i)
     {
-        wchar_t stringl[500] = L""; //í…ìŠ¤íŠ¸ ì¤„ ì €ì¥
-        IdText = StringLine(IdText, stringl); // IdTextì•ˆì—ì„œ ë„ë¬¸ì ë§Œë‚  ë•Œ ë§ˆë‹¤ ìŠ¤íŠ¸ë§ ì €ì¥
-        Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//ìŠ¤íŠ¸ë§ ì¶œë ¥
+        wchar_t stringl[500] = L""; //ÅØ½ºÆ® ÁÙ ÀúÀå
+        IdText = StringLine(IdText, stringl); // IdText¾È¿¡¼­ ³Î¹®ÀÚ ¸¸³¯ ¶§ ¸¶´Ù ½ºÆ®¸µ ÀúÀå
+        Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//½ºÆ®¸µ Ãâ·Â
         data->TotalLine++;
         
         if (*IdText == NULL)
         {
-            break; // í† íƒˆë¼ì¸ í”ŒëŸ¬ìŠ¤ ë˜ëŠ”ê±° ë©ˆì¶¤
+            break; // ÅäÅ»¶óÀÎ ÇÃ·¯½º µÇ´Â°Å ¸ØÃã
         }
     }
 
 
-    // [ ì„ íƒì§€ ]
+    // [ ¼±ÅÃÁö ]
     data->SelectId = 0;
-    // SelectText 1, 2, 3ì— ê°ê°ì˜ cvs select1, 2, 3 ë¬¸ìì—´ ë„£ìŒ
+    // SelectText 1, 2, 3¿¡ °¢°¢ÀÇ cvs select1, 2, 3 ¹®ÀÚ¿­ ³ÖÀ½
     Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
     Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
     Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
-    // SelectMovingPage 1, 2, 3ì— ê°ê°ì˜ cvs [MovingPage 1, 2, 3 ë¬¸ìì—´ ë„£ìŒ
+    // SelectMovingPage 1, 2, 3¿¡ °¢°¢ÀÇ cvs [MovingPage 1, 2, 3 ¹®ÀÚ¿­ ³ÖÀ½
     data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
     data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
     data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
-    
-    // [ ì‚¬ìš´ë“œ ]
+
+    // [ »ç¿îµå ]
     // BGM
     strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
@@ -166,22 +167,23 @@ void init_title(void)
         Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
         if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
         {
-            Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : ë¬´í•œë£¨í”„
+            Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : ¹«ÇÑ·çÇÁ
         }
         else
         {
-            Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1íšŒ ì¬ìƒ
+            Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1È¸ Àç»ı
         }
         data->SE_Volume = 1.0f;
         Audio_SetEffectVolume(&data->SE, data->SE_Volume);
     }
 
-    // [ ì´ë¯¸ì§€ ]
+    // [ ÀÌ¹ÌÁö ]
     Image_LoadImage(&data->BackGroundImage, "Background.jpg");
+    Image_LoadImage(&data->Icon, "ICON.png");
     Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
-    data->X;
-    data->Y;
+    data->X = 170;
+    data->Y = 855;
     data->Alpha;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
@@ -192,24 +194,23 @@ void update_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    // ë¸íƒ€íƒ€ì„ ì ìš©
+    // µ¨Å¸Å¸ÀÓ Àû¿ë
     static float elapsedTime;
     elapsedTime += Timer_GetDeltaTime();
 
-    // ì‹œê°„ì´ ì¦ê°€í•˜ë©´ í…ìŠ¤íŠ¸ ì¤„ ê°’++
+    // ½Ã°£ÀÌ Áõ°¡ÇÏ¸é ÅØ½ºÆ® ÁÙ °ª++
     if (elapsedTime >= 1.0f)
     {
         if (data->TextLine < 20)
         {
             data->TextLine++;
         }
-        elapsedTime = 0.0f;
+        elapsedTime = 0.0f; 
     }
 
-    // ë‹¤ìŒí˜ì´ì§€ ë„˜ê¹€ or í…ìŠ¤íŠ¸ ìŠ¤í‚µ
     if (Input_GetKeyDown(VK_SPACE))
     {
-        if (data->TextLine < data->TotalLine)
+        if(data->TextLine < data->TotalLine)
         {
             data->TextLine = data->TotalLine;
         }
@@ -217,156 +218,188 @@ void update_title(void)
         {
             Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
-            data->MovingPageSelected[data->ID][data->SelectId] = true;
-            data->ID = data->SelectMovingPage[data->SelectId];         // ID ë‹¤ìŒìœ¼ë¡œ ë„˜ì–´ê°
-            data->TextLine = 0; // í…ìŠ¤íŠ¸ì¤„ 0ì´ˆê¸°í™”
-            data->TotalLine = 0; // ì´ ëª‡ì¤„ì¸ì§€ ì²´í¬
-            data->SelectId = 0; // ì„ íƒí•œ ì„ íƒì§€ 0ìœ¼ë¡œ ì´ˆê¸°í™”
-
-            wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][ì»¬ëŸ¼ëª…]
+            data->isSelect[data->ID][data->SelectId] = true;
+            data->ID = data->SelectMovingPage[data->SelectId];         // ID ´ÙÀ½À¸·Î ³Ñ¾î°¨
+            data->SelectId = 0; // ¼±ÅÃÇÑ ¼±ÅÃÁö 0À¸·Î ÃÊ±âÈ­
+            data->TextLine = 0; // ÅØ½ºÆ®ÁÙ 0ÃÊ±âÈ­
+            data->TotalLine = 0; // ÃÑ ¸îÁÙÀÎÁö Ã¼Å©
+            data->X = 170;
+            data->Y = 855;
+       
+            wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][ÄÃ·³¸í]
 
             for (int32 i = 0; i < 20; ++i)
             {
-                wchar_t stringl[500] = L""; //í…ìŠ¤íŠ¸ ì¤„ ì €ì¥
-                IdText = StringLine(IdText, stringl); // IdTextì•ˆì—ì„œ ë„ë¬¸ì ë§Œë‚  ë•Œ ë§ˆë‹¤ ìŠ¤íŠ¸ë§ ì €ì¥
-                Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//ìŠ¤íŠ¸ë§ ì¶œë ¥
+                wchar_t stringl[500] = L""; //ÅØ½ºÆ® ÁÙ ÀúÀå
+                IdText = StringLine(IdText, stringl); // IdText¾È¿¡¼­ ³Î¹®ÀÚ ¸¸³¯ ¶§ ¸¶´Ù ½ºÆ®¸µ ÀúÀå
+                Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//½ºÆ®¸µ Ãâ·Â
                 data->TotalLine++;
 
                 if (*IdText == NULL)
                 {
-                    break; // í† íƒˆë¼ì¸ í”ŒëŸ¬ìŠ¤ ë˜ëŠ”ê±° ë©ˆì¶¤
+                    break; // ÅäÅ»¶óÀÎ ÇÃ·¯½º µÇ´Â°Å ¸ØÃã
                 }
-            }
-
-            // [ ì„ íƒì§€ ]
-            Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
-            Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
-            Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
-            data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
-            data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
-            data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
-            
-            // [ ì‚¬ìš´ë“œ ]
-            if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
-            {
-                strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-                Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-                Audio_Play(&data->BGM, INFINITY_LOOP);
-            }
-            Audio_StopSoundEffect();
-            if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
-            {
-                Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
-                if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
-                {
-                    Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : ë¬´í•œë£¨í”„
-                }
-                else
-                {
-                    Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1íšŒ ì¬ìƒ
-                }
-            }
-            LogInfo("Now ID Loading... %d", data->ID);
-        }
-
-        // [ ì„ íƒì§€ ]
-        data->selectIDCount = 0;
-        for (int i = 1; i < 3; i++)
-        {
-            if (data->SelectMovingPage[i] > 0)
-            {
-                data->selectIDCount++;
-            }
-        }
-
-        // ë°©í–¥í‚¤ë¥¼ ëˆŒëŸ¬ ì„ íƒí•  ìœ„ì¹˜ ë³€ê²½
-        if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
-        {
-            data->SelectId--;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-        }
-        if (Input_GetKeyDown(VK_DOWN) && data->SelectId < data->selectIDCount)
-        {
-            data->SelectId++;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
         }
     }
+
+        // [ ¼±ÅÃÁö ]
+        Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
+        Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
+        Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
+        data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+        data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+        data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
+            
+        // [ »ç¿îµå ]
+        if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+        {
+            strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+            Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+            Audio_Play(&data->BGM, INFINITY_LOOP);
+        }
+        Audio_StopSoundEffect();
+        if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+        {
+            Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+            if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+            {
+                Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : ¹«ÇÑ·çÇÁ
+            }
+            else 
+            {
+                Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1È¸ Àç»ı
+            }
+        }
+        LogInfo("Now ID Loading... %d", data->ID);
+    }
+
+
+
+
+    // [ ¼±ÅÃÁö ]
+    int selectIDCount = 0;
+    for (int i = 1; i < 3; i++)
+    {
+        if (data->SelectMovingPage[i] > 0)
+        {
+            selectIDCount++;
+        }
+    }
+
+    if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
+    {
+        data->SelectId--;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->Y -= 40;
+    }
+    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < selectIDCount)
+    {
+        data->SelectId++;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->Y += 40;
+    }
+
 }
 
 void render_title(void)
 {
-    TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-    // [ í…ìŠ¤íŠ¸ ]
-    // ë¸íƒ€íƒ€ì„ì´ ëŠ˜ì–´ë‚¨ì— ë”°ë¼ ëŠ˜ì–´ë‚œ í…ìŠ¤íŠ¸ ì¤„ ë§Œí¼ ì¶œë ¥
+    // [ ÅØ½ºÆ® ]
+    // µ¨Å¸Å¸ÀÓÀÌ ´Ã¾î³²¿¡ µû¶ó ´Ã¾î³­ ÅØ½ºÆ® ÁÙ ¸¸Å­ Ãâ·Â
     for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
+    for (int32 i = 0; i < data->TextLineCheck; i++)
     {
-        SDL_Color color = { .a = 255 };
         Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
     }
 
-    // [ ì„ íƒì§€ ]
-    // í…ìŠ¤íŠ¸ ì¤„ì— ì•„ë¬´ê²ƒë„ ì—†ìœ¼ë©´ ì„ íƒì§€ 3ì¤„ ì¶œë ¥
+    // [ ¼±ÅÃÁö ]
+    // ÅØ½ºÆ® ÁÙ¿¡ ¾Æ¹«°Íµµ ¾øÀ¸¸é ¼±ÅÃÁö 3ÁÙ Ãâ·Â
     if (data->TextLine >= data->TotalLine)
     {
-        // ì„ íƒì§€ ì¶œë ¥
-        int selectText_Y[3] = { 850, 890, 930 };
 
-		for (int i = 0; i < 3; i++)
-		{
-		    // ì´ë¯¸ ì„ íƒí•œ í…ìŠ¤íŠ¸ëŠ” ë¹¨ê°„ìƒ‰
-			if (data->MovingPageSelected[data->ID][i])
-			{
-				SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
-				Renderer_DrawTextSolid(&data->SelectText[i], 200, selectText_Y[i], color);
-			}
-            else
-            {
-                SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-                Renderer_DrawTextSolid(&data->SelectText[i], 200, selectText_Y[i], color);
-            }
-		}        
-    }
-  
-    // [ ì´ë¯¸ì§€ ]
-    data->BackGroundImage.Width = 1920;
-    data->BackGroundImage.Height = 1080;
-    Image_SetAlphaValue(&data->FrontImage, 255);
+        if (data->isSelect[data->ID][0])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };          
+            Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[0], 200, 850, color);
+        }
+        
+
+        if (data->isSelect[data->ID][1])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[1], 200, 890, color);
+        }
+        
+
+        if (data->isSelect[data->ID][2])
+        {
+            SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
+        }
+        else
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextSolid(&data->SelectText[2], 200, 930, color);
+        }
+
+        data->Icon.Width = 40;
+        data->Icon.Height = 30;
+        Image_SetAlphaValue(&data->Icon, 255);
+        Renderer_DrawImage(&data->Icon, data->X, data->Y); //xy ÃÊ±â°ª 180, 850
+        }
+
+
+        
+    // [ ÀÌ¹ÌÁö ]
+    data->BackGroundImage.Width = 1920;  
+    data->BackGroundImage.Height = 1080;  // ¹è°æ ÀÌ¹ÌÁö »çÀÌÁî
+    Image_SetAlphaValue(&data->BackGroundImage, 125); // ¹è°æ ÀÌ¹ÌÁö Åõ¸íµµ
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0); // ¹è°æ ÀÌ¹ÌÁö ÁÂÇ¥
     Image_SetAlphaValue(&data->BackGroundImage, 125);
-
-    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    Image_SetAlphaValue(&data->FrontImage, 255);  // ¾Õ ÀÌ¹ÌÁö Åõ¸íµµ
+    Renderer_DrawImage(&data->FrontImage, 1100, 200);  // ¾Õ ÀÌ¹ÌÁö ÁÂÇ¥
     Renderer_DrawImage(&data->FrontImage, 1100, 200);
 }
 
 void release_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-
-    // [ í…ìŠ¤íŠ¸ ]
+    // [ ÅØ½ºÆ® ]
     for (int32 i = 0; i < 50; ++i)
     {
         Text_FreeText(&data->GuideLine[i]);
     }
 
-    // [ ì„ íƒì§€ ]
+    // [ ¼±ÅÃÁö ]
     for (int32 i = 0; i < 3; ++i)
-    {
+    for (int32 i = 0; i < 10; ++i)
         Text_FreeText(&data->SelectText[i]);
-    }
+        Text_FreeText(&data->GuideLine[data->TextIdCheck][i]);
  
-    // [ ì‚¬ìš´ë“œ ]
+    // [ »ç¿îµå ]
     Audio_FreeMusic(&data->BGM);
     Audio_FreeSoundEffect(&data->SE);
+    Text_FreeText(&data->TestText);
 
     SafeFree(g_Scene.Data);
 }
 #pragma endregion
 
+#pragma region Âü°í¿ë
 
-#pragma region ì°¸ê³ ìš©
-
-// #################################################### ì°¸ê³ ìš© ë°ì´í„° ####################################################
+// #################################################### Âü°í¿ë µ¥ÀÌÅÍ ####################################################
 /*
-#pragma region MainScene
+
+
 #define GUIDELINE_COUNT 8
 
 
@@ -584,8 +617,8 @@ void release_main(void)
 //    data->Alpha = 100;
 //
 //
-//    data->FontSize = 50;
 //    Text_CreateText(&data->TestText, "HeirofLightBold.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
+//    Text_CreateText(&data->TestText, "d2coding.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
 //
 //    data->RenderMode = SOLID;
 //
@@ -597,7 +630,7 @@ void release_main(void)
 //{
 //    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
 //
-//    // ë‚˜ì¤‘ì— íƒ€ìì¹˜ë“¯ì´ í•˜ë‚˜ì”© ì¶œë ¥ë  ì˜ˆì •
+//    // ³ªÁß¿¡ Å¸ÀÚÄ¡µíÀÌ ÇÏ³ª¾¿ Ãâ·ÂµÉ ¿¹Á¤
 //
 //}
 //
@@ -650,11 +683,11 @@ void release_main(void)
 //
 //}
 //
-//#pragma endregion
 */
 // ###################################################################################################################
 
 #pragma endregion
+
 
 
 bool Scene_IsSetNextScene(void)
@@ -699,13 +732,13 @@ void Scene_Change(void)
         g_Scene.Update = update_title;
         g_Scene.Render = render_title;
         g_Scene.Release = release_title;
-        break;
     //case SCENE_MAIN:
     //    g_Scene.Init = init_main;
     //    g_Scene.Update = update_main;
     //    g_Scene.Render = render_main;
     //    g_Scene.Release = release_main;
     //    break;
+        break;
     }
 
     g_Scene.Init();
