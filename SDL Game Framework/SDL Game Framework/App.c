@@ -111,7 +111,7 @@ int32 App_Run(void)
 			if (Timer_Update())
 			{
 				processInput();
-				update();
+  				update();
 				render();
 			}
 		}
