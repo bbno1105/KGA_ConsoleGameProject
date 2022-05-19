@@ -93,8 +93,9 @@ typedef struct TitleSceneData
     // 이미지관련
     Image   BackGroundImage;
     Image   FrontImage;
-    int32	X;
-    int32	Y;
+    Image   Icon;
+    int32	Icon_X;
+    int32	Icon_Y;
     int32	Alpha;
 
     // 사운드관련
@@ -158,7 +159,7 @@ void init_title(void)
     strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_Play(&data->BGM, INFINITY_LOOP);
-    data->BGM_Volume = 0.1f;
+    data->BGM_Volume = 0.5f;
     Audio_SetVolume(data->BGM_Volume);
     // SE
     if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
@@ -178,10 +179,11 @@ void init_title(void)
 
     // [ 이미지 ]
     Image_LoadImage(&data->BackGroundImage, "Background.jpg");
+    Image_LoadImage(&data->Icon, "ICON.png");
     Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
-    data->X;
-    data->Y;
+    data->Icon_X = 170;
+    data->Icon_Y = 855;
     data->Alpha;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
@@ -222,6 +224,9 @@ void update_title(void)
             data->TextLine = 0; // 텍스트줄 0초기화
             data->TotalLine = 0; // 총 몇줄인지 체크
             data->SelectId = 0; // 선택한 선택지 0으로 초기화
+            data->Icon_X = 170;
+            data->Icon_Y = 855;
+
 
             wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
 
@@ -278,18 +283,20 @@ void update_title(void)
                 data->selectIDCount++;
             }
         }
+    }
 
-        // 방향키를 눌러 선택할 위치 변경
-        if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
-        {
-            data->SelectId--;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-        }
-        if (Input_GetKeyDown(VK_DOWN) && data->SelectId < data->selectIDCount)
-        {
-            data->SelectId++;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-        }
+    // 방향키를 눌러 선택할 위치 변경
+    if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
+    {
+        data->SelectId--;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->Icon_Y -= 40;
+    }
+    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < data->selectIDCount)
+    {
+        data->SelectId++;
+        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->Icon_Y += 40;
     }
 }
 
@@ -325,6 +332,11 @@ void render_title(void)
                 Renderer_DrawTextSolid(&data->SelectText[i], 200, selectText_Y[i], color);
             }
 		}        
+
+        data->Icon.Width = 40;
+        data->Icon.Height = 30;
+        Image_SetAlphaValue(&data->Icon, 255);
+        Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
     }
   
     // [ 이미지 ]
