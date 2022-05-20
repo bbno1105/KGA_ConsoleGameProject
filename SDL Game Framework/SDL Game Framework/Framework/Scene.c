@@ -52,14 +52,13 @@ void init_start(void)
         Text_CreateText(&data->StartMenu[i], "HeirofLightBold.ttf", 30, str1[i], wcslen(str1[i]));
     }
 
-    Image_LoadImage(&data->How_To_Operate, "HowToOperate.png");
-    Image_LoadImage(&data->Operate_Icon, "ICON.png");
 
     //이미지 로드
     Image_LoadImage(&data->Start_BackGround_Image, "Background.jpg");
     Image_LoadImage(&data->Start_Front_Image, "Main1.png");
     Image_LoadImage(&data->Icon, "ICON.png");
-
+    Image_LoadImage(&data->How_To_Operate, "HowToOperate.png");
+    Image_LoadImage(&data->Operate_Icon, "ICON.png");
     data->Start_Icon_X = 810;
     data->Start_Icon_Y = 710;
     data->Alpha = 255;
@@ -469,24 +468,95 @@ void release_title(void)
 
 #pragma region Ending_Credits_Scene
 
+const wchar_t* str2[] = {
+    L" ENDING CREDITS",
+    L"",
+    L" 히아신스의 신부",
+    L"",
+    L"     기획",
+    L"    김준영",
+    L"    박수현",
+    L"    홍혁기",
+    L"",
+    L"     개발",
+    L"    안중재",
+    L"    문수진",
+    L"    이수연"
+};
+
+typedef struct Ending_Credits_Data
+{
+    Text Ending_Credits_Text[13];
+    int32		Ending_Credits_Text_X;
+    int32		Ending_Credits_Text_Y;
+    int32		Alpha;
+
+}Ending_Credits_Data;
+
 void init_credits(void)
 {
+    g_Scene.Data = malloc(sizeof(Ending_Credits_Data));
+    memset(g_Scene.Data, 0, sizeof(Ending_Credits_Data));
 
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
+
+    //텍스트 만들기
+    for (int32 i = 0; i < 13; ++i)
+    {
+        Text_CreateText(&data->Ending_Credits_Text[i], "HeirofLightBold.ttf", 30, str2[i], wcslen(str2[i]));
+    }
+
+    data->Ending_Credits_Text_X = 1100;
+    data->Ending_Credits_Text_Y = 900;
+    data->Alpha = 225;
 }
 
 void update_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
+
+
+    // 크레딧 올리기
+    static float elapsedTime;
+    elapsedTime += Timer_GetDeltaTime();
+
+    //while (1)
+    //{
+    //    if (elapsedTime >= 1.0f)
+    //    {
+    //        if (data->Ending_Credits_Text_Y > -20)
+    //        {
+    //            data->Ending_Credits_Text_Y--;
+    //        }
+    //        elapsedTime = 0.0f;
+    //    }
+    //}
 
 }
 
 void render_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+    // 텍스트 출력
+    for (int32 i = 0; i < 13; ++i)
+    {
+        SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha };
+        Renderer_DrawTextSolid(&data->Ending_Credits_Text[i], data->Ending_Credits_Text_X, data->Ending_Credits_Text_Y + 20 * i, color);
+    }
 }
 
 void release_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+    //텍스트 반환
+    for (int32 i = 0; i < 13; ++i)
+    {
+        Text_FreeText(&data->Ending_Credits_Text[i]);
+    }
+
+    SafeFree(g_Scene.Data);
 }
 #pragma endregion
 
