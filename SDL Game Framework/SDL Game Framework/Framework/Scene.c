@@ -142,7 +142,6 @@ void init_title(void)
         }
     }
 
-
     // [ 선택지 ]
     data->SelectId = 0;
     // SelectText 1, 2, 3에 각각의 cvs select1, 2, 3 문자열 넣음
@@ -310,12 +309,12 @@ void render_title(void)
         if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
         {
             SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
-            Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
         else 
         {
             SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-            Renderer_DrawTextSolid(&data->GuideLine[i], 200, 200 + 40 * i, color);
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
     }
 
@@ -332,12 +331,12 @@ void render_title(void)
 			if (data->MovingPageSelected[data->ID][i])
 			{
 				SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
-				Renderer_DrawTextSolid(&data->SelectText[i], 200, selectText_Y[i], color);
+				Renderer_DrawTextBlended(&data->SelectText[i], 200, selectText_Y[i], color);
 			}
             else
             {
                 SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-                Renderer_DrawTextSolid(&data->SelectText[i], 200, selectText_Y[i], color);
+                Renderer_DrawTextBlended(&data->SelectText[i], 200, selectText_Y[i], color);
             }
 		}        
 
@@ -543,7 +542,7 @@ void render_main(void)
     for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
     {
         SDL_Color color = { .a = 255 };
-        Renderer_DrawTextSolid(&data->GuideLine[i], 100, 400 + 25 * i, color);
+        Renderer_DrawTextBlended(&data->GuideLine[i], 100, 400 + 25 * i, color);
     }
 
     Renderer_DrawImage(&data->Front, 0, 0);
@@ -633,7 +632,7 @@ void release_main(void)
 //    for (int32 i = 0; i < 10; ++i)
 //    {
 //        SDL_Color color = { .a = 255 };
-//        Renderer_DrawTextSolid(&data->GuideLine[i], 400, 200 * i, color);
+//        Renderer_DrawTextBlended(&data->GuideLine[i], 400, 200 * i, color);
 //    }
 //
 //    switch (data->RenderMode)
@@ -641,7 +640,7 @@ void release_main(void)
 //    case SOLID:
 //    {
 //        SDL_Color color = { .a = 255 };
-//        Renderer_DrawTextSolid(&data->TestText, 400, 400, color);
+//        Renderer_DrawTextBlended(&data->TestText, 400, 400, color);
 //    }
 //    break;
 //    case SHADED:
