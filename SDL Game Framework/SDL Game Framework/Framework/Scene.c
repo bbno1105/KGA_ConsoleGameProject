@@ -119,13 +119,13 @@ void render_start(void)
 
     //텍스트 출력
     SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-    Renderer_DrawTextSolid(&data->Title_Hyacinth, 760, 490, color);
+    Renderer_DrawTextBlended(&data->Title_Hyacinth, 760, 490, color);
 
     int StartSelectText_Y[3] = { 700, 740, 780 };
     for (int32 i = 0; i < 3; ++i)
     {
         SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-        Renderer_DrawTextSolid(&data->StartMenu[i], 850, StartSelectText_Y[i] + 20 * i, color);
+        Renderer_DrawTextBlended(&data->StartMenu[i], 850, StartSelectText_Y[i] + 20 * i, color);
     }
 
     //조작방법 출력
@@ -338,7 +338,7 @@ void update_title(void)
     }
 
     // 카운트다운 시작
-    if (data->TextLine >= data->TotalLine)
+    if (data->TextLine >= data->TotalLine && data->selectIDCount >= 1)
     {
         data->isLoading = true;
         static float countTime = 0;
@@ -564,14 +564,7 @@ void update_title(void)
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-    // [ 이미지 ]
-    data->BackGroundImage.Width = 1920;
-    data->BackGroundImage.Height = 1080;
-    Image_SetAlphaValue(&data->FrontImage, 255);
-    Image_SetAlphaValue(&data->BackGroundImage, 255);
 
-    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    Renderer_DrawImage(&data->FrontImage, 1100, 200);
     // [ 텍스트 ]
     SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
     Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
@@ -633,8 +626,8 @@ void render_title(void)
     // [ 로딩 바 ]
     if (data->isLoading)
     {
-        Renderer_DrawImage(&data->LoadingBar, 360, 1000, color);
-        Renderer_DrawImage(&data->LoadingBarFrame, 360, 1000, color);
+        Renderer_DrawImage(&data->LoadingBar, 660, 1000, color);
+        Renderer_DrawImage(&data->LoadingBarFrame, 660, 1000, color);
     }
 
     // [ 메뉴 ]
