@@ -73,6 +73,23 @@ typedef struct TitleSceneData
 {
     // 모두 관련
     int32   ID;
+    int32   PlayerDieCount;
+    bool    isPlayerReturn;
+    int32   PlayerReturnPoint;
+
+    // 메뉴
+    Image   MenuImage;
+    Text    Escape;
+    Text    SelectMenu[3];
+    Image   MenuIcon;
+    int32   SelectMenuValue;
+    bool    isEscapeActive;
+
+    // 로딩바
+    float   CountTime;
+    Image   LoadingBarFrame;
+    Image   LoadingBar;
+    bool    isLoading;
 
     // 텍스트 관련
     Text    GuideLine[50];          // [id][줄바꿈]
@@ -97,6 +114,7 @@ typedef struct TitleSceneData
     int32	Icon_X;
     int32	Icon_Y;
     int32	Alpha;
+    float   ImageActiveTime;
 
     // 사운드관련
     Music   BGM;
@@ -117,12 +135,29 @@ void init_title(void)
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
     data->ID = 1;               // ID 1부터 시작
+    
+    data->isPlayerReturn = false; // 회귀중이냐
 
+    // [ 메뉴 ]
+    data->isEscapeActive = false;
+    Text_CreateText(&data->Escape, "HeirofLightBold.ttf", 25, L"메뉴 : ESC", wcslen(L"메뉴 : ESC"));
+    Image_LoadImage(&data->MenuImage, "IngameMenu.png");
+    data->SelectMenuValue = 0;
+    Text_CreateText(&data->SelectMenu[0], "HeirofLightBold.ttf", 30, L"게임으로 돌아가기", wcslen(L"게임으로 돌아가기"));
+    Text_CreateText(&data->SelectMenu[1], "HeirofLightBold.ttf", 30, L"처음 화면으로", wcslen(L"처음 화면으로"));
+    Text_CreateText(&data->SelectMenu[2], "HeirofLightBold.ttf", 30, L"게임 종료", wcslen(L"게임 종료"));
+    Image_LoadImage(&data->MenuIcon, "ICON.png");
+
+    // [ 로딩바 ]
+    data->CountTime = 5;
+    Image_LoadImage(&data->LoadingBarFrame, "LoadingBarFrame.png");
+    Image_LoadImage(&data->LoadingBar, "LoadingBar.png");
+    data->isLoading = false;
 
     // [ 텍스트 ]
     data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
-    data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
+    data->RenderMode = BLENDED;   // 랜더보드 : 글자만 나오게
     data->TotalLine = 0;
     memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
 
@@ -184,6 +219,7 @@ void init_title(void)
     data->Icon_X = 170;
     data->Icon_Y = 855;
     data->Alpha;
+    data->ImageActiveTime = 0.0f;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
     //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -206,24 +242,41 @@ void update_title(void)
         }
         elapsedTime = 0.0f;
     }
+    
+    // 이미지 출력을 위한 델타타임
+    data->ImageActiveTime += Timer_GetDeltaTime(); 
 
-    // 다음페이지 넘김 or 텍스트 스킵
-    if (Input_GetKeyDown(VK_SPACE))
+    if (Input_GetKeyDown(VK_ESCAPE))
     {
-        if (data->TextLine < data->TotalLine)
-        {
-            data->TextLine = data->TotalLine;
-        }
-        else
-        {
+        // Esc 누르면 메뉴 띄우기
+        data->isEscapeActive = !data->isEscapeActive;
+    }
 
-            data->MovingPageSelected[data->ID][data->SelectId] = true;
-            data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
+    // 카운트다운 시작
+    if (data->TextLine >= data->TotalLine)
+    {
+        data->isLoading = true;
+        static float countTime = 0;
+        countTime += Timer_GetDeltaTime();
+        if (countTime > 0.1f)
+        {
+            data->CountTime -= 0.01f;
+            data->LoadingBar.ScaleX = data->CountTime / 5;
+        }
+        if (data->CountTime <= 0)
+        {
+            data->isLoading = false;
+            data->ID = data->SelectMovingPage[0]; // 1번선택지 자동 선택
+
             data->TextLine = 0; // 텍스트줄 0초기화
             data->TotalLine = 0; // 총 몇줄인지 체크
+            data->CountTime = 5;
+
             data->SelectId = 0; // 선택한 선택지 0으로 초기화
             data->Icon_X = 170;
             data->Icon_Y = 855;
+
+            data->ImageActiveTime = 0.0f; // 이미지
 
             Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
@@ -249,7 +302,7 @@ void update_title(void)
             data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
             data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
             data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
-            
+
             // [ 사운드 ]
             if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
             {
@@ -270,39 +323,166 @@ void update_title(void)
                     Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
                 }
             }
-            LogInfo("Now ID Loading... %d", data->ID);
-        }
 
-        // [ 선택지 ]
-        data->selectIDCount = 0;
-        for (int i = 1; i < 3; i++)
-        {
-            if (data->SelectMovingPage[i] > 0)
+            // [ 선택지 ]
+            data->selectIDCount = 0; // 0번 선택지 자동선택
+            for (int i = 1; i < 3; i++) // 선택지 몇개인지 찾기
             {
-                data->selectIDCount++;
+                if (data->SelectMovingPage[i] > 0)
+                {
+                    data->selectIDCount++;
+                }
+            }
+        }
+    }
+
+    // 다음페이지 넘김 or 텍스트 스킵
+    if (Input_GetKeyDown(VK_SPACE) && data->isPlayerReturn == false)
+    {
+        if (data->isEscapeActive)
+        {
+            switch (data->SelectMenuValue)
+            {
+            case 0 :
+                LogInfo("선택1");
+                data->isEscapeActive = false;
+                break;
+            case 1:
+                LogInfo("선택2");
+                Scene_SetNextScene(SCENE_START);
+                break;
+            case 2:
+                LogInfo("선택3");
+                exit(0);
+                break;
+            }
+        }
+        else
+        {
+            if (data->TextLine < data->TotalLine) // 스킵 기능
+            {
+                data->TextLine = data->TotalLine;
+                data->ImageActiveTime = 3;
+            }
+            else // 진행 기능
+            {
+                data->MovingPageSelected[data->ID][data->SelectId] = true; // 선택한 선택지 저장
+
+                data->isLoading = false; // 로딩바 삭제
+
+                data->ID = data->SelectMovingPage[data->SelectId];         
+
+                if (data->ID == 2) // 회귀시점 저장
+                {
+                    data->PlayerReturnPoint = 2;
+                }
+
+                data->TextLine = 0; // 텍스트줄 0초기화
+                data->TotalLine = 0; // 총 몇줄인지 체크
+                data->CountTime = 5;
+
+                data->SelectId = 0; // 선택한 선택지 0으로 초기화
+                data->Icon_X = 170;
+                data->Icon_Y = 855;
+
+                data->ImageActiveTime = 0.0f; // 이미지
+
+                Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
+
+                wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
+
+                for (int32 i = 0; i < 20; ++i)
+                {
+                    wchar_t stringl[500] = L""; //텍스트 줄 저장
+                    IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
+                    Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
+                    data->TotalLine++;
+
+                    if (*IdText == NULL)
+                    {
+                        break; // 토탈라인 플러스 되는거 멈춤
+                    }
+                }
+
+                // [ 선택지 ]
+                Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
+                Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
+                Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
+                data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+                data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+                data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
+            
+                // [ 사운드 ]
+                if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+                {
+                    strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+                    Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+                    Audio_Play(&data->BGM, INFINITY_LOOP);
+                }
+                Audio_StopSoundEffect();
+                if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+                {
+                    Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+                    if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+                    {
+                        Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+                    }
+                    else
+                    {
+                        Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+                    }
+                }
+                LogInfo("Now ID Loading... %d", data->ID);
+            }
+            // [ 선택지 ]
+            data->selectIDCount = 0; // 0번 선택지 자동선택
+            for (int i = 1; i < 3; i++) // 선택지 몇개인지 찾기
+            {
+                if (data->SelectMovingPage[i] > 0)
+                {
+                    data->selectIDCount++;
+                }
             }
         }
     }
 
     // 방향키를 눌러 선택할 위치 변경
-    if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
+    if (Input_GetKeyDown(VK_UP))
     {
-        data->SelectId--;
-        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-        data->Icon_Y -= 40;
+        if (data->isEscapeActive && data->SelectMenuValue > 0)
+        {
+            data->SelectMenuValue--;
+        }
+        else if (!data->isEscapeActive && data->SelectId > 0)
+        {
+            data->SelectId--;
+            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+            data->Icon_Y -= 40;
+        }
     }
-    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < data->selectIDCount)
+    if (Input_GetKeyDown(VK_DOWN))
     {
-        data->SelectId++;
-        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-        data->Icon_Y += 40;
+        if (data->isEscapeActive && data->SelectMenuValue < 2)
+        {
+            data->SelectMenuValue++;
+        }
+        else if (!data->isEscapeActive && data->SelectId < data->selectIDCount)
+        {
+            data->SelectId++;
+            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+            data->Icon_Y += 40;
+        }
     }
 }
+
 
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
     // [ 텍스트 ]
+    SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
+    Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
+
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
     {
@@ -316,6 +496,17 @@ void render_title(void)
             SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
             Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
+    }
+
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    {
+        Image_SetAlphaValue(&data->FrontImage, 255);
+        Renderer_DrawImage(&data->FrontImage, 1100, 200);
     }
 
     // [ 선택지 ]
@@ -345,20 +536,42 @@ void render_title(void)
         Image_SetAlphaValue(&data->Icon, 255);
         Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
     }
-  
-    // [ 이미지 ]
-    data->BackGroundImage.Width = 1920;
-    data->BackGroundImage.Height = 1080;
-    Image_SetAlphaValue(&data->FrontImage, 255);
-    Image_SetAlphaValue(&data->BackGroundImage, 125);
 
-    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    // [ 로딩 바 ]
+    if (data->isLoading)
+    {
+        Renderer_DrawImage(&data->LoadingBar, 360, 1000, color);
+        Renderer_DrawImage(&data->LoadingBarFrame, 360, 1000, color);
+    }
+
+    // [ 메뉴 ]
+    if (data->isEscapeActive)
+    {
+        // 메뉴 출력
+        Renderer_DrawImage(&data->MenuImage, 0, 0);
+        for (int i = 0; i < 3; i++)
+        {
+            Renderer_DrawTextBlended(&data->SelectMenu[i], 850, 500 + (i * 90), color);
+        }
+        data->MenuIcon.Width = 30;
+        data->MenuIcon.Height = 30;
+        Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
+    }
+  
 }
 
 void release_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+
+    // [ 이미지 ] 
+    Image_FreeImage(&data->MenuImage);
+    Image_FreeImage(&data->BackGroundImage);
+    Image_FreeImage(&data->FrontImage);
+    Image_FreeImage(&data->Icon);
+    Image_FreeImage(&data->MenuIcon);
+    Image_FreeImage(&data->LoadingBar);
+    Image_FreeImage(&data->LoadingBarFrame);
 
     // [ 텍스트 ]
     for (int32 i = 0; i < 50; ++i)
