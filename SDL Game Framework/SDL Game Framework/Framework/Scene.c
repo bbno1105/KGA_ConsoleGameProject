@@ -13,13 +13,27 @@ static ESceneType s_nextScene = SCENE_NULL;
 #define SHADED 1
 #define BLENDED 2
 
+
+const wchar_t* str1[] = {
+    L"▶게임시작",
+    L"▶조작방법",
+    L"▶게임종료"
+};
 typedef struct Start_Data
 {
     Image		Start_BackGround_Image;
+    Image       Start_Front_Image;
+    Image       How_To_Operate;
+    Image       Icon;
+    Image       Operate_Icon;
+    bool        How_To_Operate_Open;
+
     float		Speed;
-    int32		X;
-    int32		Y;
+    int32		Start_Icon_X;
+    int32		Start_Icon_Y;
     int32		Alpha;
+    Text        Title_Hyacinth;
+    Text        StartMenu[3];
 
 } Start_Data;
 
@@ -30,37 +44,108 @@ void init_start(void)
 
     Start_Data* data = (Start_Data*)g_Scene.Data;
 
-    Image_LoadImage(&data->Start_BackGround_Image, "main.png");
+    //텍스트 만들기
+    Text_CreateText(&data->Title_Hyacinth, "HeirofLightBold.ttf", 50, L"히아신스의 신부", wcslen(L"히아신스의 신부"));
 
-    data->X;
-    data->Y;
-    data->Alpha;
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_CreateText(&data->StartMenu[i], "HeirofLightBold.ttf", 30, str1[i], wcslen(str1[i]));
+    }
+
+    Image_LoadImage(&data->How_To_Operate, "HowToOperate.png");
+    Image_LoadImage(&data->Operate_Icon, "ICON.png");
+
+    //이미지 로드
+    Image_LoadImage(&data->Start_BackGround_Image, "Background.jpg");
+    Image_LoadImage(&data->Start_Front_Image, "Main1.png");
+    Image_LoadImage(&data->Icon, "ICON.png");
+
+    data->Start_Icon_X = 810;
+    data->Start_Icon_Y = 710;
+    data->Alpha = 255;
+
 }
 
 void update_start(void)
 {
     Start_Data* data = (Start_Data*)g_Scene.Data;
 
+    // 방향키를 눌러 선택할 위치 변경
+
+    if (Input_GetKeyDown(VK_UP) && data->Start_Icon_Y > 710)
+    {
+        data->Start_Icon_Y -= 60;
+    }
+    if (Input_GetKeyDown(VK_DOWN) && data->Start_Icon_Y < 780)
+    {
+        data->Start_Icon_Y += 60;
+    }
     if (Input_GetKeyDown(VK_SPACE))
     {
-        Scene_SetNextScene(SCENE_TITLE);
-    }
+        if (data->Start_Icon_Y == 710)
+        {
+            Scene_SetNextScene(SCENE_TITLE);
+        }
+        else if (data->Start_Icon_Y == 770)
+        {
+            data->How_To_Operate_Open = !data->How_To_Operate_Open;
+        }
+        else
+        {
+            exit(0);
+        }
+    }   
 }
 
 void render_start(void)
 {
     Start_Data* data = (Start_Data*)g_Scene.Data;
 
+    //이미지 사이즈
     data->Start_BackGround_Image.Width = 1920;
     data->Start_BackGround_Image.Height = 1080;
-    Image_SetAlphaValue(&data->Start_BackGround_Image, 255);
-
+    data->Start_Front_Image.Width = 800;
+    data->Start_Front_Image.Height = 360;
+    data->Icon.Width = 35;
+    data->Icon.Height = 35;
+    data->Operate_Icon.Width = 35;
+    data->Operate_Icon.Height = 35;
+    
+    //이미지 투명도 및 이미지 출력
     Renderer_DrawImage(&data->Start_BackGround_Image, 0, 0);
+    Renderer_DrawImage(&data->Start_Front_Image, 560, 125);
+    Renderer_DrawImage(&data->Icon, data->Start_Icon_X, data->Start_Icon_Y);
+
+
+    //텍스트 출력
+    SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
+    Renderer_DrawTextSolid(&data->Title_Hyacinth, 760, 490, color);
+
+    int StartSelectText_Y[3] = { 700, 740, 780 };
+    for (int32 i = 0; i < 3; ++i)
+    {
+        SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
+        Renderer_DrawTextSolid(&data->StartMenu[i], 850, StartSelectText_Y[i] + 20 * i, color);
+    }
+
+    //조작방법 출력
+    if (data->How_To_Operate_Open == true)
+    {
+        Renderer_DrawImage(&data->How_To_Operate, 0, 0);
+        Renderer_DrawImage(&data->Operate_Icon, 1195, 795);
+    }
+
 }
 
 void release_start(void)
 {
     Start_Data* data = (Start_Data*)g_Scene.Data;
+    Text_FreeText(&data->Title_Hyacinth);
+
+    for (int32 i = 0; i < 3; ++i)
+    {
+        Text_FreeText(&data->StartMenu[i]);
+    }
 
     SafeFree(g_Scene.Data);
 }
@@ -479,6 +564,14 @@ void update_title(void)
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->FrontImage, 255);
+    Image_SetAlphaValue(&data->BackGroundImage, 255);
+
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    Renderer_DrawImage(&data->FrontImage, 1100, 200);
     // [ 텍스트 ]
     SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
     Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
@@ -530,9 +623,9 @@ void render_title(void)
                 Renderer_DrawTextBlended(&data->SelectText[i], 200, selectText_Y[i], color);
             }
 		}        
-
+        
         data->Icon.Width = 30;
-        data->Icon.Height = 30;
+        data->Icon.Height = 30; //아이콘 이미지 사이즈 조절
         Image_SetAlphaValue(&data->Icon, 255);
         Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
     }
@@ -590,6 +683,30 @@ void release_title(void)
     Audio_FreeSoundEffect(&data->SE);
 
     SafeFree(g_Scene.Data);
+}
+#pragma endregion
+
+
+#pragma region Ending_Credits_Scene
+
+void init_credits(void)
+{
+
+}
+
+void update_credits(void)
+{
+
+}
+
+void render_credits(void)
+{
+
+}
+
+void release_credits(void)
+{
+
 }
 #pragma endregion
 
@@ -932,12 +1049,12 @@ void Scene_Change(void)
         g_Scene.Render = render_title;
         g_Scene.Release = release_title;
         break;
-    //case SCENE_MAIN:
-    //    g_Scene.Init = init_main;
-    //    g_Scene.Update = update_main;
-    //    g_Scene.Render = render_main;
-    //    g_Scene.Release = release_main;
-    //    break;
+    case SCENE_ENDING_CREDITS:
+        g_Scene.Init = init_credits;
+        g_Scene.Update = update_credits;
+        g_Scene.Render = render_credits;
+        g_Scene.Release = release_credits;
+        break;
     }
 
     g_Scene.Init();
