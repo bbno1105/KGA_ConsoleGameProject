@@ -334,11 +334,11 @@ void init_title(void)
 
 	// [ 페이드 인/아웃 ] 
 	data->isFade = false;
-	data->EyesImage_Up_Y = 0;
-	data->EyesImage_Down_Y = 380;
+	data->EyesImage_Up_Y = -700;
+	data->EyesImage_Down_Y = 1080;
 	data->FadeInOut_Alpha = 0;
-	data->FadeInOut_Alpha_bool = false;
-	data->EyesImage_bool = false;
+	data->FadeInOut_Alpha_bool = true;
+	data->EyesImage_bool = true;
 
 	//Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	//Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -374,9 +374,9 @@ void update_title(void)
 		}
 		if (EyesElapsedTime >= 0.01f && data->EyesImage_bool)
 		{
-			data->EyesImage_Up_Y += 4;
-			data->EyesImage_Down_Y -= 4;
-			if (data->EyesImage_Down_Y <= 0)
+			data->EyesImage_Up_Y += 5;
+			data->EyesImage_Down_Y -= 5;
+			if (data->EyesImage_Down_Y <= 380)
 			{
 				data->EyesImage_Up_Y = 0;
 				data->EyesImage_Down_Y = 380;
@@ -385,7 +385,7 @@ void update_title(void)
 			EyesElapsedTime = 0.0f;
 		}
 		
-		if (fadeTime > 5 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
+		if (fadeTime > 3 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
 		{
 			data->PlayerDieCount++;
 			// 페이드 인 시작 (2.55초)
@@ -418,8 +418,6 @@ void update_title(void)
 		}
 		EyesElapsedTime = 0.0f;
 	}
-
-	
 
 	wchar_t playerRetrunCountText[50] = L"";
 	wchar_t playerReturnCount[10] = L"";
