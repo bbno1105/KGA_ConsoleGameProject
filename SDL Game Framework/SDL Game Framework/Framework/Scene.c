@@ -316,8 +316,8 @@ void init_title(void)
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
     //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
-    data->Text_X;
-    data->Text_Y;
+    data->Text_X = 0;
+    data->Text_Y = 0;
 }
 
     
@@ -539,6 +539,16 @@ void update_title(void)
             }
         }
     }
+
+    if (data->TextEffect = 1)
+    {
+        int randum_X = rand() % 5 + 1;
+        data->Text_X = randum_X;
+        data->Text_Y = randum_X;
+    }
+    //asdf
+
+    
 }
 
 void render_title(void)
