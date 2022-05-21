@@ -331,14 +331,16 @@ void update_title(void)
     // 이미지 출력을 위한 델타타임
     data->ImageActiveTime += Timer_GetDeltaTime(); 
 
+    // Esc 누르면 메뉴 띄우기
     if (Input_GetKeyDown(VK_ESCAPE))
     {
-        // Esc 누르면 메뉴 띄우기
         data->isEscapeActive = !data->isEscapeActive;
     }
 
+
+
     // 카운트다운 시작
-    if (data->TextLine >= data->TotalLine && data->selectIDCount >= 1)
+    if (data->TextLine >= data->TotalLine && data->selectIDCount >= 1) // 선택지 2개 이상일 때
     {
         data->isLoading = true;
         static float countTime = 0;
@@ -348,10 +350,12 @@ void update_title(void)
             data->CountTime -= 0.01f;
             data->LoadingBar.ScaleX = data->CountTime / 5;
         }
-        if (data->CountTime <= 0)
+        if (data->CountTime <= 0) // 카운트다운 끝나면 첫번째 선택지 자동 선택
         {
             data->isLoading = false;
-            data->ID = data->SelectMovingPage[0]; // 1번선택지 자동 선택
+            data->ID = data->SelectMovingPage[0]; // 선택지 자동 선택
+            
+            data->MovingPageSelected[data->ID][0] = true; // 자동 선택된 선택지 저장
 
             data->TextLine = 0; // 텍스트줄 0초기화
             data->TotalLine = 0; // 총 몇줄인지 체크
@@ -424,7 +428,7 @@ void update_title(void)
     // 다음페이지 넘김 or 텍스트 스킵
     if (Input_GetKeyDown(VK_SPACE) && data->isPlayerReturn == false)
     {
-        if (data->isEscapeActive)
+        if (data->isEscapeActive) // 선택지 선택
         {
             switch (data->SelectMenuValue)
             {
@@ -441,7 +445,7 @@ void update_title(void)
                 exit(0);
                 break;
             }
-        }
+        } 
         else
         {
             if (data->TextLine < data->TotalLine) // 스킵 기능
@@ -457,7 +461,7 @@ void update_title(void)
 
                 data->ID = data->SelectMovingPage[data->SelectId];         
 
-                if (data->ID == 2) // 회귀시점 저장
+                if (data->ID == 2) // 회귀시점 저장 (핟으콛잉)
                 {
                     data->PlayerReturnPoint = 2;
                 }
@@ -644,6 +648,10 @@ void render_title(void)
         Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
     }
   
+
+    // 페이드 인
+
+    // 페이드 아웃
 }
 
 void release_title(void)
