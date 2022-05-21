@@ -185,6 +185,7 @@ typedef struct TitleSceneData
     int32   TotalLine;              // 총 몇줄인지 체크
     int32   FontSize;
     int32   RenderMode;
+    bool    isSkip;
 
     // 선택지관련
     int32	Pointer_X;
@@ -205,11 +206,15 @@ typedef struct TitleSceneData
     float   ImageActiveTime;
 
     // 사운드관련
+    bool    isBGM;
     Music   BGM;
     char    NowBGM[20];
     float   BGM_Volume;
+    bool    isSE;
     SoundEffect   SE;
     float   SE_Volume;
+    float   SoundActiveTime;
+
 
 } TitleSceneData;
 
@@ -247,6 +252,7 @@ void init_title(void)
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
     data->RenderMode = BLENDED;   // 랜더보드 : 글자만 나오게
     data->TotalLine = 0;
+    data->isSkip = false;
     memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
 
     // testtext에 Test_s 내용추가
@@ -277,6 +283,7 @@ void init_title(void)
     data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
     
     // [ 사운드 ]
+    data->isBGM = false;
     // BGM
     strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
     Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
@@ -308,6 +315,7 @@ void init_title(void)
     data->Icon_Y = 855;
     data->Alpha;
     data->ImageActiveTime = 0.0f;
+    data->SoundActiveTime = 0.0f;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
     //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -339,7 +347,9 @@ void update_title(void)
     _itow(data->PlayerDieCount, playerReturnCount, 10);
     wcscat(playerRetrunCountText, playerReturnCount);
     Text_CreateText(&data->PlayerReturnCountText, "HeirofLightBold.ttf", 20, playerRetrunCountText, wcslen(playerRetrunCountText));
+    
     bool RefreshScene = false;
+    bool isSkip = false;
 
     // 델타타임 적용
     static float elapsedTime;
@@ -357,6 +367,9 @@ void update_title(void)
     
     // 이미지 출력을 위한 델타타임
     data->ImageActiveTime += Timer_GetDeltaTime(); 
+
+    // 이미지 출력을 위한 델타타임
+    data->SoundActiveTime += Timer_GetDeltaTime();
 
     // Esc 누르면 메뉴 띄우기
     if (Input_GetKeyDown(VK_ESCAPE))
@@ -411,13 +424,17 @@ void update_title(void)
             if (data->TextLine < data->TotalLine) // 스킵 기능
             {
                 data->TextLine = data->TotalLine;
-                data->ImageActiveTime = 3;
+                data->ImageActiveTime = 4;
+                data->SoundActiveTime = 4;
+                data->isSkip = true;
+                // 시간 델타타임도 올려줌
             }
             else // 진행 기능
             {
                 data->MovingPageSelected[data->ID][data->SelectId] = true; // 선택한 선택지 저장
 
                 data->isLoading = false; // 로딩바 삭제
+                data->isSkip = false;
 
                 data->ID = data->SelectMovingPage[data->SelectId];         
                 
@@ -459,8 +476,6 @@ void update_title(void)
         }
     }
 
-
-
     // 다음 씬 정보 가져오기위해 초기화도 시켜주는곳
     if (RefreshScene)
     {
@@ -478,6 +493,7 @@ void update_title(void)
         data->Icon_Y = 855;
 
         data->ImageActiveTime = 0.0f; // 이미지
+        data->SoundActiveTime = 0.0f; // 이미지
 
         Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
@@ -505,26 +521,9 @@ void update_title(void)
         data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
 
         // [ 사운드 ]
-        if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
-        {
-            strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-            Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-            Audio_Play(&data->BGM, INFINITY_LOOP);
-        }
+        data->isBGM = true;
+        data->isSE = true;
         Audio_StopSoundEffect();
-        if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
-        {
-            Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
-            if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
-            {
-                Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
-            }
-            else
-            {
-                Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
-            }
-        }
-        LogInfo("Now ID Loading... %d", data->ID);
 
         // [ 선택지 ]
         data->selectIDCount = 0; // 0번 선택지 자동선택
@@ -629,6 +628,43 @@ void render_title(void)
         data->MenuIcon.Width = 30;
         data->MenuIcon.Height = 30;
         Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
+    }
+
+    // [ 사운드 ]
+    // 시간이 흐르면
+    if (data->isBGM)
+    {
+        if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+        {
+            strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+            Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+            Audio_Play(&data->BGM, INFINITY_LOOP);
+        }
+        data->isBGM = false;
+    }
+
+    if (data->SoundActiveTime > 3 && data->isSE)
+    {
+        
+
+        if (!data->isSkip)
+        {
+            if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+            {
+                Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+                if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+                {
+                    Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+                }
+                else
+                {
+                    Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+                }
+            }
+            LogInfo("Now ID Loading... %d", data->ID);
+        }
+        data->isSkip = false;
+        data->isSE = false;
     }
 
     // 페이드 인
