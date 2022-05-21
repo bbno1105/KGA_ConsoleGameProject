@@ -1,17 +1,21 @@
 #include "stdafx.h"
 #include "TextData.h"
 
-void TextData_Init(TextData* textData)
+void TextData_Init(TextData* textData, int32 id)
 {
 	memset(textData, 0, sizeof(TextData));
 	textData->FontSize = 18;
+    // idText에 Text_s 내용추가
+      wchar_t* idText = ParseToUnicode(csvFile.Items[id + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
+
+    SaveOneTextLine(textData, idText);
 }
 
 void TextData_Update(TextData* textData, int32 id)
 {
 	// 델타타임 적용
     textData->ElapsedTimeForRenderingLineByLine += Timer_GetDeltaTime();
-
+    
     // 시간이 증가하면 텍스트 줄 값++
     if (textData->ElapsedTimeForRenderingLineByLine >= 1.0f)
     {
@@ -25,8 +29,7 @@ void TextData_Update(TextData* textData, int32 id)
     if (Input_GetKeyDown(VK_SPACE))
     {
         textData->MovingPageNumberIndex = 0; // 선택한 선택지 0으로 초기화
-        textData->ID = id; // ID 다음으로 넘어감
-
+       
         if (textData->TextLine < textData->TotalLine)
         {
             textData->TextLine = textData->TotalLine;
@@ -37,14 +40,17 @@ void TextData_Update(TextData* textData, int32 id)
             textData->TotalLine = 0; // 총 몇줄인지 체크
             
             wchar_t* idText = ParseToUnicode(csvFile.Items[id + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
+
             SaveOneTextLine(textData, idText);
-            SafeFree(idText);           
+            
+            //SafeFree(idText);           
         }
     }   
 }
 
 void TextData_Render(TextData* textData, int32 id)
 {
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
     for (int32 i = 0; i < textData->TextLine && i < textData->TotalLine; i++)
     {
         if (id > 2 && ParseToInt(csvFile.Items[id + 1][MovingPage1_i]) == 2 && i + 1 == textData->TotalLine)
@@ -84,7 +90,7 @@ void SaveOneTextLine(TextData* textData, wchar_t* idText)
     }
 }
 
-void SwingText(TextData* textData)
+void SwingText(TextData* textData, int32 id)
 {
     int32 x = Random_GetFNumberFromRange(10, 30);
     int32 y = Random_GetFNumberFromRange(0, 15);

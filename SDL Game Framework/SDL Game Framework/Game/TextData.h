@@ -5,7 +5,7 @@
 
 typedef struct TagTextData
 {
-	int32	ID;
+	//int32	ID;
 	Text    GuideLine[50];       // [id][줄바꿈]
 	int32   TextLine;            // 텍스트 줄
 	int32   TotalLine;           // 총 몇줄인지 체크
@@ -18,11 +18,11 @@ typedef struct TagTextData
 	float	ElapsedTimeForRenderingLineByLine;
 } TextData;
 
-void TextData_Init(TextData* textData);
-void TextData_Update(TextData* textData);
-void TextData_Render(TextData* textData);
+void TextData_Init(TextData* textData, int32 id);
+void TextData_Update(TextData* textData, int32 id);
+void TextData_Render(TextData* textData, int32 id);
 void TextData_Release(TextData* textData);
 
-void SaveOneTextLine(TextData* textData);
+void SaveOneTextLine(TextData* textData, int32 id);
 
-void SwingText(TextData* textData);
+void SwingText(TextData* textData, int32 id);

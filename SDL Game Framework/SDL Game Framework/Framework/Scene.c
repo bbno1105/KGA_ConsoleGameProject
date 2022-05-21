@@ -113,13 +113,13 @@ void init_title(void)
 
     data->ID = 1;               // ID 1부터 시작
 
+    TextData_Init(&data->TextData, data->ID);
 
     // [ 텍스트 ]
-    TextData_Init(&data->TextData);
 
     memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
     wchar_t* idText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]);
-    SaveOneTextLine(&data->TextData, idText);
+    //SaveOneTextLine(&data->TextData, idText);
     SafeFree(idText);
     
     // [ 선택지 ]
@@ -178,7 +178,7 @@ void update_title(void)
     if (Input_GetKeyDown(VK_SPACE))
 	{
 		data->MovingPageSelected[data->ID][data->MovingPageNumberIndex] = true;
-		data->ID = data->SelectMovingPageNumber[data->MovingPageNumberIndex];         // ID 다음으로 넘어감
+		data->ID = data->SelectMovingPageNumber[data->MovingPageNumberIndex]; // ID 다음으로 넘어감
 		data->Icon_X = 170;
 		data->Icon_Y = 855;
 
@@ -254,8 +254,6 @@ void render_title(void)
     Renderer_DrawImage(&data->FrontImage, 1100, 200);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
 
-    // [ 텍스트 ]
-    TextData_Render(&data->TextData, data->ID);
 
     // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
@@ -285,6 +283,8 @@ void render_title(void)
         Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
     }
   
+    // [ 텍스트 ]
+    TextData_Render(&data->TextData, data->ID);
 }
 
 void release_title(void)
