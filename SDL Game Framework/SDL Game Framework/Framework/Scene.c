@@ -684,7 +684,7 @@ void render_title(void)
             SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
             Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
-
+        //asdf
     }
 
 
