@@ -45,7 +45,7 @@ void init_start(void)
     Start_Data* data = (Start_Data*)g_Scene.Data;
 
     //텍스트 만들기
-    Text_CreateText(&data->Title_Hyacinth, "HeirofLightBold.ttf", 50, L"히아신스의 신부", wcslen(L"히아신스의 신부"));
+    Text_CreateText(&data->Title_Hyacinth, "HeirofLightBold.ttf", 65, L"히아신스의 신부", wcslen(L"히아신스의 신부"));
 
     for (int32 i = 0; i < 3; ++i)
     {
@@ -103,8 +103,8 @@ void render_start(void)
     //이미지 사이즈
     data->Start_BackGround_Image.Width = 1920;
     data->Start_BackGround_Image.Height = 1080;
-    data->Start_Front_Image.Width = 800;
-    data->Start_Front_Image.Height = 360;
+    data->Start_Front_Image.Width = 830;
+    data->Start_Front_Image.Height = 390;
     data->Icon.Width = 35;
     data->Icon.Height = 35;
     data->Operate_Icon.Width = 35;
@@ -112,13 +112,13 @@ void render_start(void)
     
     //이미지 투명도 및 이미지 출력
     Renderer_DrawImage(&data->Start_BackGround_Image, 0, 0);
-    Renderer_DrawImage(&data->Start_Front_Image, 560, 125);
+    Renderer_DrawImage(&data->Start_Front_Image, 520, 125);
     Renderer_DrawImage(&data->Icon, data->Start_Icon_X, data->Start_Icon_Y);
 
 
     //텍스트 출력
     SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-    Renderer_DrawTextBlended(&data->Title_Hyacinth, 760, 490, color);
+    Renderer_DrawTextBlended(&data->Title_Hyacinth, 700, 550, color);
 
     int StartSelectText_Y[3] = { 700, 740, 780 };
     for (int32 i = 0; i < 3; ++i)
@@ -202,9 +202,8 @@ typedef struct TitleSceneData
 
     //Fade In/Out 관련
     Image   Black_Image;
-    int32   FadeIn_Alpha;
-    int32   FadeOut_Alpha;
-    bool    FadeIn_Alpha_Zero;
+    int32   FadeInOut_Alpha;
+    bool    FadeInOut_Alpha_bool;
 
     // 사운드관련
     Music   BGM;
@@ -310,10 +309,9 @@ void init_title(void)
     data->Icon_X = 170;
     data->Icon_Y = 855;
     data->Alpha;
-    data->FadeIn_Alpha = 255;
-    data->FadeOut_Alpha = 0;
+    data->FadeInOut_Alpha;
     data->ImageActiveTime = 0.0f;
-    data->FadeIn_Alpha_Zero = false;
+    data->FadeInOut_Alpha_bool = false;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
     //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -337,7 +335,6 @@ void update_title(void)
         elapsedTime = 0.0f;
     }
 
-    
 
     // 이미지 출력을 위한 델타타임
     data->ImageActiveTime += Timer_GetDeltaTime(); 
@@ -570,20 +567,41 @@ void update_title(void)
             }
         }
     
-    /*페이드 인*/
-        static float FadeInElapsedTime;     
-        FadeInElapsedTime += Timer_GetDeltaTime(); 
+    ///*페이드 인*/
+    //    static float FadeInOutElapsedTime;     
+    //    
+    //    if (페이드인이 호출되었을 때)
+    //    {
+    //        FadeInOutElapsedTime += Timer_GetDeltaTime(); 
 
-        if (FadeInElapsedTime >= 0.01f && data->FadeIn_Alpha_Zero == false)
-        {
-            data->FadeIn_Alpha--;
-            FadeInElapsedTime = 0.0f;
-        }
-        if (data->FadeIn_Alpha <= 0)
-        {
-            data->FadeIn_Alpha_Zero == true;
-        }
+    //        if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
+    //        {
+    //            data->FadeInOut_Alpha--;
+    //            FadeInOutElapsedTime = 0.0f;
+    //        }
+    //        if (data->FadeInOut_Alpha <= 0)
+    //        {
+    //            data->FadeInOut_Alpha = 0;
+    //            data->FadeInOut_Alpha_bool = true;
+    //        }
+    //    }
 
+
+    //    if (페이드 아웃 호출)
+    //    {
+    //        FadeInOutElapsedTime += Timer_GetDeltaTime();
+
+    //        if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
+    //        {
+    //            data->FadeInOut_Alpha++;
+    //            FadeInOutElapsedTime = 0.0f;
+    //        }
+    //        if (data->FadeInOut_Alpha >= 255)
+    //        {
+    //            data->FadeInOut_Alpha = 255;
+    //            data->FadeInOut_Alpha_bool = true;
+    //        }
+    //    }
 }
 
 
@@ -603,7 +621,7 @@ void render_title(void)
     if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
-        Renderer_DrawImage(&data->FrontImage, 1100, 200);
+        Renderer_DrawImage(&data->FrontImage, 980, 200);
     }
 
     // 페이드 인
@@ -611,7 +629,7 @@ void render_title(void)
     {
         data->Black_Image.Width = 1920;
         data->Black_Image.Height = 1080;
-        Image_SetAlphaValue(&data->Black_Image, data->FadeIn_Alpha);
+        Image_SetAlphaValue(&data->Black_Image, data->FadeInOut_Alpha);
         Renderer_DrawImage(&data->Black_Image, 0, 0);
     }
 
