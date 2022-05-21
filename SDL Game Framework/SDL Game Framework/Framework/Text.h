@@ -5,6 +5,8 @@ typedef struct Text
 	struct TTF_Font*	Font;
 	wchar_t*			String;
 	int32				Length;
+	float				ElapsedTime;
+	COORD				TextCoord;
 } Text;
 
 typedef enum FontStyle
@@ -64,3 +66,7 @@ void Text_SetFontStyle(Text* text, EFontStyle style);
 /// <param name="text">텍스트 객체</param>
 /// <returns>폰트 스타일</returns>
 EFontStyle Text_GetFontStyle(const Text* text);
+
+void TextEffext_1(Text* text);
+void TextEffext_2(Text* text);
+void TextEffext_3(Text* text);
