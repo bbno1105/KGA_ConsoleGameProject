@@ -205,6 +205,7 @@ typedef struct TitleSceneData
 	float   ImageActiveTime;
 
 	//Fade In/Out 관련
+	bool	isFade;
 	Image   Black_Image;
 	int32   FadeInOut_Alpha;
 	bool    FadeInOut_Alpha_bool;
@@ -240,6 +241,7 @@ void init_title(void)
 	data->ID = 1;               // ID 1부터 시작
 
 	data->isPlayerReturn = false; // 회귀중이냐
+	
 
 	// [ 메뉴 ]
 	data->isEscapeActive = false;
@@ -299,6 +301,7 @@ void init_title(void)
 	Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
 	Audio_Play(&data->BGM, INFINITY_LOOP);
 	data->BGM_Volume = 1.0f;
+	data->SoundActiveTime = 0.0f;
 	Audio_SetVolume(data->BGM_Volume);
 	// SE
 	if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
@@ -326,14 +329,16 @@ void init_title(void)
 
 	data->Icon_X = 170;
 	data->Icon_Y = 855;
+	data->ImageActiveTime = 0.0f;
+	data->Alpha;
+
+	// [ 페이드 인/아웃 ] 
+	data->isFade = false;
 	data->EyesImage_Up_Y = 0;
 	data->EyesImage_Down_Y = 380;
-	data->Alpha;
-	data->FadeInOut_Alpha = 255;
-	data->ImageActiveTime = 0.0f;
+	data->FadeInOut_Alpha = 0;
 	data->FadeInOut_Alpha_bool = false;
 	data->EyesImage_bool = false;
-	data->SoundActiveTime = 0.0f;
 
 	//Audio_LoadMusic(&data->BGM, "powerful.mp3");
 	//Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -343,21 +348,78 @@ void update_title(void)
 {
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	static float fadeTime;
+	// [ 페이드 인/아웃 ]
+	static float fadeTime; // 페이드 시간
+	static float FadeInOutElapsedTime; // 화면
+	static float EyesElapsedTime; // 눈
+
+	FadeInOutElapsedTime += Timer_GetDeltaTime();
+	EyesElapsedTime += Timer_GetDeltaTime();
+
 	if (data->ID == data->PlayerReturnPoint && data->isPlayerReturn)
 	{
 		fadeTime += Timer_GetDeltaTime();
-		// 페이드 아웃 시작 (2.55초)
-		if (fadeTime > 3)
+
+		data->isFade = true;
+
+		if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool)
+		{
+			data->FadeInOut_Alpha += 2;
+			if (data->FadeInOut_Alpha >= 255)
+			{
+				data->FadeInOut_Alpha = 255;
+				data->FadeInOut_Alpha_bool = false;
+			}
+			FadeInOutElapsedTime = 0.0f;
+		}
+		if (EyesElapsedTime >= 0.01f && data->EyesImage_bool)
+		{
+			data->EyesImage_Up_Y += 4;
+			data->EyesImage_Down_Y -= 4;
+			if (data->EyesImage_Down_Y <= 0)
+			{
+				data->EyesImage_Up_Y = 0;
+				data->EyesImage_Down_Y = 380;
+				data->EyesImage_bool = false;
+			}
+			EyesElapsedTime = 0.0f;
+		}
+		
+		if (fadeTime > 5 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
 		{
 			data->PlayerDieCount++;
 			// 페이드 인 시작 (2.55초)
 			fadeTime = 0;
-			LogInfo("회귀중...."); // << 잘 들어오네~
 			data->isPlayerReturn = false;
 		}
 		return;
 	}
+
+	if (FadeInOutElapsedTime >= 0.01f && !data->FadeInOut_Alpha_bool)
+	{
+		data->FadeInOut_Alpha -= 2;
+		if (data->FadeInOut_Alpha <= 0)
+		{
+			data->FadeInOut_Alpha = 0;
+			data->FadeInOut_Alpha_bool = true;
+		}
+		FadeInOutElapsedTime = 0.0f;
+	}
+	if (EyesElapsedTime >= 0.01f && !data->EyesImage_bool)
+	{
+		data->EyesImage_Up_Y -= 4;
+		data->EyesImage_Down_Y += 4;
+
+		if (data->EyesImage_Down_Y >= 1080)
+		{
+			data->EyesImage_Up_Y = -700;
+			data->EyesImage_Down_Y = 1080;
+			data->EyesImage_bool = true;
+		}
+		EyesElapsedTime = 0.0f;
+	}
+
+	
 
 	wchar_t playerRetrunCountText[50] = L"";
 	wchar_t playerReturnCount[10] = L"";
@@ -383,78 +445,13 @@ void update_title(void)
 		elapsedTime = 0.0f;
 	}
 
-
 	// 이미지 출력을 위한 델타타임
 	data->ImageActiveTime += Timer_GetDeltaTime();
 
 	// SE 출력을 위한 델타타임
 	data->SoundActiveTime += Timer_GetDeltaTime();
 
-	// [ 페이드 인/아웃 ]
-	static float FadeInOutElapsedTime;
-
-	FadeInOutElapsedTime += Timer_GetDeltaTime();
-
-	if (data->ID == 2 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
-	{
-		data->FadeInOut_Alpha -= 2;
-		FadeInOutElapsedTime = 0.0f;
-	}
-	if (data->FadeInOut_Alpha <= 0)
-	{
-		data->FadeInOut_Alpha = 0;
-		data->FadeInOut_Alpha_bool = true;
-	}
-
-	if (data->ID == 48 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == true)
-	{
-		data->FadeInOut_Alpha += 2;
-		FadeInOutElapsedTime = 0.0f;
-	}
-	if (data->FadeInOut_Alpha >= 255)
-	{
-		data->FadeInOut_Alpha = 255;
-		data->FadeInOut_Alpha_bool = false;
-	}
-
-	////눈 관련 델타타임
-	static float EyesElapsedTime;
-
-	EyesElapsedTime += Timer_GetDeltaTime();
-
-
-	if (data->ID == 2 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == false) // 함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
-	{
-		data->EyesImage_Up_Y -= 4;
-		data->EyesImage_Down_Y += 4;
-
-		EyesElapsedTime = 0.0f;
-	}
-	if (data->EyesImage_Down_Y == 1080)
-	{
-		data->EyesImage_Up_Y = -700;
-		data->EyesImage_Down_Y = 1080;
-		data->EyesImage_bool = true;
-	}
-
-	if (data->ID == 48 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == true) //함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
-	{
-		data->EyesImage_Up_Y += 4;
-		data->EyesImage_Down_Y -= 4;
-
-		EyesElapsedTime = 0.0f;
-	}
-	if (data->EyesImage_Up_Y == 0)
-	{
-		data->EyesImage_Up_Y = 0;
-		data->EyesImage_Down_Y = 380;
-		data->EyesImage_bool = false;
-	}
-
-
-
-
-
+	
 
 
 	// Esc 누르면 메뉴 띄우기
@@ -620,10 +617,7 @@ void update_title(void)
 		data->isSE = true;
 		Audio_StopSoundEffect();
 	}
-
-	
 }
-
 
 void render_title(void)
 {
@@ -660,17 +654,6 @@ void render_title(void)
 			Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
 		}
 	}
-
-	//// [ 이미지 ]
-	//data->BackGroundImage.Width = 1920;
-	//data->BackGroundImage.Height = 1080;
-	//Image_SetAlphaValue(&data->BackGroundImage, 125);
-	//Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-	//if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
-	//{
-	//    Image_SetAlphaValue(&data->FrontImage, 255);
-	//    Renderer_DrawImage(&data->FrontImage, 1100, 200);
-	//}
 
 	// [ 플레이어 데이터 ]
 	{
@@ -771,7 +754,7 @@ void render_title(void)
 	}
 
 	// 페이드 인/아웃 이미지, 눈 떴다/감았다 이미지 출력부분
-	if (data->ID == 2 || data->ID == 48)
+	if (data->isFade)
 	{
 		data->Black_Image.Width = 1920;
 		data->Black_Image.Height = 1080;
