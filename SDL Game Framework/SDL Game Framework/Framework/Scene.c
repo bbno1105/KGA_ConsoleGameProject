@@ -401,6 +401,45 @@ void update_title(void)
         }
     }
 
+    // 방향키를 눌러 선택할 위치 변경
+    if (Input_GetKeyDown(VK_UP))
+    {
+        if (data->isEscapeActive && data->SelectMenuValue > 0)
+        {
+            data->SelectMenuValue--;
+        }
+        else if (!data->isEscapeActive && data->SelectId > 0)
+        {
+            data->SelectId--;
+            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+            data->Icon_Y -= 40;
+        }
+    }
+    if (Input_GetKeyDown(VK_DOWN))
+    {
+        if (data->isEscapeActive && data->SelectMenuValue < 2)
+        {
+            data->SelectMenuValue++;
+        }
+        else if (!data->isEscapeActive && data->SelectId < data->selectIDCount)
+        {
+            data->SelectId++;
+            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+            data->Icon_Y += 40;
+        }
+    }
+
+    // 다음 씬 = 플레이어 저장 회귀씬이라면
+    // 
+    // n초 동안 델타 돌아감----
+    // 페이드 아웃 시작 (n초)
+    // 플레이어 죽은 횟수 카운트 증가
+    // 페이드 아웃 종료
+    // ---- n초 종료
+    // 페이드 인 시작 (n초)
+    //
+    // 다음 진행
+
 
     // 다음 씬 정보 가져오기위해 초기화도 시켜주는곳
     if (RefreshScene)
@@ -475,34 +514,6 @@ void update_title(void)
             {
                 data->selectIDCount++;
             }
-        }
-    }
-
-    // 방향키를 눌러 선택할 위치 변경
-    if (Input_GetKeyDown(VK_UP))
-    {
-        if (data->isEscapeActive && data->SelectMenuValue > 0)
-        {
-            data->SelectMenuValue--;
-        }
-        else if (!data->isEscapeActive && data->SelectId > 0)
-        {
-            data->SelectId--;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-            data->Icon_Y -= 40;
-        }
-    }
-    if (Input_GetKeyDown(VK_DOWN))
-    {
-        if (data->isEscapeActive && data->SelectMenuValue < 2)
-        {
-            data->SelectMenuValue++;
-        }
-        else if (!data->isEscapeActive && data->SelectId < data->selectIDCount)
-        {
-            data->SelectId++;
-            LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
-            data->Icon_Y += 40;
         }
     }
 }
