@@ -353,8 +353,10 @@ void update_title(void)
         {
             data->isLoading = false;
 
-            data->ID = data->SelectMovingPage[2]; // 선택지 자동 선택
-            data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
+            data->ID = 2;
+
+            //data->ID = data->SelectMovingPage[2]; // 선택지 자동 선택
+            //data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
 
             RefreshScene = true;
         }
@@ -547,7 +549,7 @@ void render_title(void)
     data->BackGroundImage.Height = 1080;
     Image_SetAlphaValue(&data->BackGroundImage, 125);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
