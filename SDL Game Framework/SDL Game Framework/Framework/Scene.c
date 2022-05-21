@@ -118,13 +118,13 @@ void render_start(void)
 
     //텍스트 출력
     SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-    Renderer_DrawTextSolid(&data->Title_Hyacinth, 760, 490, color);
+    Renderer_DrawTextBlended(&data->Title_Hyacinth, 760, 490, color);
 
     int StartSelectText_Y[3] = { 700, 740, 780 };
     for (int32 i = 0; i < 3; ++i)
     {
         SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-        Renderer_DrawTextSolid(&data->StartMenu[i], 850, StartSelectText_Y[i] + 20 * i, color);
+        Renderer_DrawTextBlended(&data->StartMenu[i], 850, StartSelectText_Y[i] + 20 * i, color);
     }
 
     //조작방법 출력
@@ -469,28 +469,29 @@ void release_title(void)
 #pragma region Ending_Credits_Scene
 
 const wchar_t* str2[] = {
-    L" ENDING CREDITS",
+    L"ENDING CREDITS",
     L"",
-    L" 히아신스의 신부",
+    L"   히아신스의 신부",
     L"",
-    L"     기획",
-    L"    김준영",
-    L"    박수현",
-    L"    홍혁기",
+    L"             기획",
+    L"           김준영",
+    L"           박수현",
+    L"           홍혁기",
     L"",
-    L"     개발",
-    L"    안중재",
-    L"    문수진",
-    L"    이수연"
+    L"             개발",
+    L"           안중재",
+    L"           문수진",
+    L"           이수연"
 };
 
 typedef struct Ending_Credits_Data
 {
-    Text Ending_Credits_Text[13];
+    Text        Ending_Credits_Text[13];
     int32		Ending_Credits_Text_X;
     int32		Ending_Credits_Text_Y;
     int32		Alpha;
-
+    Image		Ending_Credits_BackGround_Image;
+    Image		Ending_Credits_Front_Image;
 }Ending_Credits_Data;
 
 void init_credits(void)
@@ -506,9 +507,14 @@ void init_credits(void)
         Text_CreateText(&data->Ending_Credits_Text[i], "HeirofLightBold.ttf", 30, str2[i], wcslen(str2[i]));
     }
 
-    data->Ending_Credits_Text_X = 1100;
-    data->Ending_Credits_Text_Y = 900;
+    //배경이미지 로드
+    Image_LoadImage(&data->Ending_Credits_BackGround_Image, "Background.jpg");
+    Image_LoadImage(&data->Ending_Credits_Front_Image, "ending_front_image.png");
+
+    data->Ending_Credits_Text_X = 790;
+    data->Ending_Credits_Text_Y = 1000;
     data->Alpha = 225;
+
 }
 
 void update_credits(void)
@@ -520,17 +526,20 @@ void update_credits(void)
     static float elapsedTime;
     elapsedTime += Timer_GetDeltaTime();
 
-    //while (1)
-    //{
-    //    if (elapsedTime >= 1.0f)
-    //    {
-    //        if (data->Ending_Credits_Text_Y > -20)
-    //        {
-    //            data->Ending_Credits_Text_Y--;
-    //        }
-    //        elapsedTime = 0.0f;
-    //    }
-    //}
+    for (int i = data->Ending_Credits_Text_Y; i > 200; i--)
+    {
+        if (elapsedTime >= 0.01f)
+        {
+            data->Ending_Credits_Text_Y = data->Ending_Credits_Text_Y-1;
+            
+            elapsedTime = 0.0f;
+        }
+    }
+
+    if (Input_GetKeyDown(VK_SPACE))
+    {
+        Scene_SetNextScene(SCENE_START);
+    }
 
 }
 
@@ -538,12 +547,21 @@ void render_credits(void)
 {
     Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+    //배경 출력
+    data->Ending_Credits_BackGround_Image.Width = 1920;
+    data->Ending_Credits_BackGround_Image.Height = 1080;
+    Renderer_DrawImage(&data->Ending_Credits_BackGround_Image, 0, 0);
+
     // 텍스트 출력
     for (int32 i = 0; i < 13; ++i)
     {
         SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha };
-        Renderer_DrawTextSolid(&data->Ending_Credits_Text[i], data->Ending_Credits_Text_X, data->Ending_Credits_Text_Y + 20 * i, color);
+        Renderer_DrawTextBlended(&data->Ending_Credits_Text[i], data->Ending_Credits_Text_X, data->Ending_Credits_Text_Y + 50 * i, color);
     }
+
+    //data->Ending_Credits_Front_Image.Width = 1920;
+    //data->Ending_Credits_Front_Image.Height = 1080;
+    Renderer_DrawImage(&data->Ending_Credits_Front_Image, 0, 0);
 }
 
 void release_credits(void)
