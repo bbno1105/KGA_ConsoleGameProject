@@ -144,9 +144,17 @@ bool isString = false;
 
 wchar_t* StringLine(wchar_t* string, wchar_t* stringl)
 {
+	/*char* sArr[20] = { 0 };
+	int index = 0;
 
+	wchar_t* stringl = strtok(*string, "\n");
+	*/
 	while (true)
 	{
+		/*sArr[index] = stringl;
+		index++;
+		stringl = strtok(NULL, "\n");*/
+
 		if (*string == L'\n')
 		{
 			*stringl = NULL;

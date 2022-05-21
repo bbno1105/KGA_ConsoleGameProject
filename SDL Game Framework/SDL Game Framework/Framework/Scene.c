@@ -252,6 +252,7 @@ void init_title(void)
     data->FontSize = 18;        // 데이터 폰트 사이즈 설정
     data->RenderMode = BLENDED;   // 랜더보드 : 글자만 나오게
     data->TotalLine = 0;
+    data->TextEffect = 0;
     memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
 
     // testtext에 Test_s 내용추가
@@ -349,17 +350,35 @@ void update_title(void)
     elapsedTime += Timer_GetDeltaTime();
 
     // 시간이 증가하면 텍스트 줄 값++
-    if (elapsedTime >= 1.0f)
+    data->TextEffect = ParseToInt(csvFile.Items[data->ID + 1][TextEffect_i]);
+    if (data->TextEffect == 4)
     {
-        if (data->TextLine < 20)
+        if (elapsedTime >= 0.1f)
         {
-            data->TextLine++;
+            if (data->TextLine < 20)
+            {
+                data->TextLine++;
+            }
+            elapsedTime = 0.0f;
         }
-        elapsedTime = 0.0f;
+    }
+    else
+    {
+        if (elapsedTime >= 1.0f)
+        {
+            if (data->TextLine < 20)
+            {
+                data->TextLine++;
+            }
+            elapsedTime = 0.0f;
+        }
     }
     
     // 이미지 출력을 위한 델타타임
     data->ImageActiveTime += Timer_GetDeltaTime(); 
+
+    // 텍스트 속도조절
+    
 
     // Esc 누르면 메뉴 띄우기
     if (Input_GetKeyDown(VK_ESCAPE))
@@ -540,49 +559,29 @@ void update_title(void)
         }
     }
 
-    if (data->TextEffect = 1)
-    {
-        int randum_X = rand() % 5 + 1;
-        data->Text_X = randum_X;
-        data->Text_Y = randum_X;
-    }
-    //asdf
+	// 텍스트 효과 123
+	switch (data->TextEffect)
+	{
+	case 1:
+	{
+		int random = rand() % 5 + 1;
+		data->Text_X = random;
+		data->Text_Y = -1 * random;
+		break;
+	}
+	case 2:
+		data->Text_X = rand() % 5 + 1;
+		break;
+	case 3:
+		data->Text_Y = rand() % 5 + 1;
+		break;
+	}
 
-    
 }
 
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-
-    // [ 텍스트 ]
-    SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
-    Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
-
-    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
-    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
-    {
-        if (data->TextLine == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]))
-        {
-            // 텍스트 흔들림 1
-            if (data->TextEffect = 1)
-            {
-
-                TextEffext_1(&data->GuideLine[i]);
-            }
-        }
-        else if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
-        {
-            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-        else 
-        {
-            SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-
-    }
 
     // [ 이미지 ]
     data->BackGroundImage.Width = 1920;
@@ -594,6 +593,84 @@ void render_title(void)
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
     }
+    // [ 텍스트 ]
+    SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
+    Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
+
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
+    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
+    {
+        //  업데이트에서 지정한 텍스트 라인 = cvs의 텍스트 라인일 때
+        if (data->TextLine == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i])) 
+        {
+            // 일단 텍스트 이펙트에 cvs의 텍스트 이펙트 집어넣어!
+            
+
+            if (data->TextEffect == 1)
+            {
+                // 텍스트 흔들림 1
+                if (i != ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+            }
+
+            if (data->TextEffect == 2)
+            {
+                // 텍스트 흔들림 1
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            if (data->TextEffect == 3)
+            {
+                // 텍스트 흔들림 1
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            if (data->TextEffect == 4)
+            {
+                // 텍스트 속도 빨라짐
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+        }
+        else if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
+        {
+            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+        else 
+        {
+            SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+
+    }
+
 
     // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
