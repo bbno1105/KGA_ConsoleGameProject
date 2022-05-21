@@ -204,6 +204,12 @@ typedef struct TitleSceneData
     Image   Black_Image;
     int32   FadeInOut_Alpha;
     bool    FadeInOut_Alpha_bool;
+    //Eyes In/Out 관련
+    Image   EyesImage_Up;  
+    int32	EyesImage_Up_Y;
+    Image   EyesImage_Down;   
+    int32	EyesImage_Down_Y;
+    bool    EyesImage_bool;
 
     // 사운드관련
     Music   BGM;
@@ -305,13 +311,18 @@ void init_title(void)
     Image_LoadImage(&data->Icon, "ICON.png");
     Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
     Image_LoadImage(&data->Black_Image, "Black_Image.jpg");
+    Image_LoadImage(&data->EyesImage_Up, "up.png");
+    Image_LoadImage(&data->EyesImage_Down, "down.png");
 
     data->Icon_X = 170;
     data->Icon_Y = 855;
+    data->EyesImage_Up_Y = 0;
+    data->EyesImage_Down_Y = 380;
     data->Alpha;
-    data->FadeInOut_Alpha;
+    data->FadeInOut_Alpha = 255;
     data->ImageActiveTime = 0.0f;
     data->FadeInOut_Alpha_bool = false;
+    data->EyesImage_bool = false;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
     //Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
@@ -568,40 +579,75 @@ void update_title(void)
         }
     
     ///*페이드 인*/
-    //    static float FadeInOutElapsedTime;     
-    //    
+       static float FadeInOutElapsedTime;     
+       
     //    if (페이드인이 호출되었을 때)
     //    {
-    //        FadeInOutElapsedTime += Timer_GetDeltaTime(); 
+            FadeInOutElapsedTime += Timer_GetDeltaTime(); 
 
-    //        if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
-    //        {
-    //            data->FadeInOut_Alpha--;
-    //            FadeInOutElapsedTime = 0.0f;
-    //        }
-    //        if (data->FadeInOut_Alpha <= 0)
-    //        {
-    //            data->FadeInOut_Alpha = 0;
-    //            data->FadeInOut_Alpha_bool = true;
-    //        }
+            if (data->ID == 2 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
+            {
+                data->FadeInOut_Alpha-=2;
+                FadeInOutElapsedTime = 0.0f;
+            }
+            if (data->FadeInOut_Alpha <= 0)
+            {
+                data->FadeInOut_Alpha = 0;
+                data->FadeInOut_Alpha_bool = true;
+            }
     //    }
 
 
     //    if (페이드 아웃 호출)
     //    {
-    //        FadeInOutElapsedTime += Timer_GetDeltaTime();
+            /*FadeInOutElapsedTime += Timer_GetDeltaTime();*/
 
-    //        if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == false)
-    //        {
-    //            data->FadeInOut_Alpha++;
-    //            FadeInOutElapsedTime = 0.0f;
-    //        }
-    //        if (data->FadeInOut_Alpha >= 255)
-    //        {
-    //            data->FadeInOut_Alpha = 255;
-    //            data->FadeInOut_Alpha_bool = true;
-    //        }
+            if (data->ID == 48 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == true)
+            {
+                data->FadeInOut_Alpha+=2;
+                FadeInOutElapsedTime = 0.0f;
+            }
+            if (data->FadeInOut_Alpha >= 255)
+            {
+                data->FadeInOut_Alpha = 255;
+                data->FadeInOut_Alpha_bool = false;
+            }
     //    }
+    
+
+        ////눈 관련 델타타임
+        static float EyesElapsedTime;
+
+        EyesElapsedTime += Timer_GetDeltaTime();
+
+
+            if (data->ID == 2 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == false) // 함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+            {
+                data->EyesImage_Up_Y -= 4;
+                data->EyesImage_Down_Y += 4;
+
+                EyesElapsedTime = 0.0f;
+            }
+            if (data->EyesImage_Down_Y == 1080)
+            {
+                data->EyesImage_Up_Y = -700;
+                data->EyesImage_Down_Y = 1080;
+                data->EyesImage_bool = true;
+            }
+
+            if (data->ID == 48 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == true) //함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+            {
+                data->EyesImage_Up_Y += 4;
+                data->EyesImage_Down_Y -= 4;
+
+                EyesElapsedTime = 0.0f;
+            }
+            if (data->EyesImage_Up_Y == 0)
+            {
+                data->EyesImage_Up_Y = 0;
+                data->EyesImage_Down_Y = 380;
+                data->EyesImage_bool = false;
+            }
 }
 
 
@@ -624,14 +670,8 @@ void render_title(void)
         Renderer_DrawImage(&data->FrontImage, 980, 200);
     }
 
-    // 페이드 인
-    if (data->ID == 2)
-    {
-        data->Black_Image.Width = 1920;
-        data->Black_Image.Height = 1080;
-        Image_SetAlphaValue(&data->Black_Image, data->FadeInOut_Alpha);
-        Renderer_DrawImage(&data->Black_Image, 0, 0);
-    }
+
+
 
     // [ 텍스트 ]
     SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
@@ -689,6 +729,22 @@ void render_title(void)
         Renderer_DrawImage(&data->LoadingBarFrame, 660, 1000, color);
     }
 
+    // 페이드 인/아웃 이미지, 눈 떴다/감았다 이미지 출력부분
+    if (data->ID == 2 || data->ID == 48)
+    {
+        data->Black_Image.Width = 1920;
+        data->Black_Image.Height = 1080;
+        Image_SetAlphaValue(&data->Black_Image, data->FadeInOut_Alpha);
+        Renderer_DrawImage(&data->Black_Image, 0, 0);
+
+        //data->EyesImage_Up.Width = 1920;
+        //data->EyesImage_Down.Width = 1920;
+        //data->Black_Image.Height = 1080;
+        Image_SetAlphaValue(&data->EyesImage_Up, 255);
+        Image_SetAlphaValue(&data->EyesImage_Down, 255);
+        Renderer_DrawImage(&data->EyesImage_Up, 0, data->EyesImage_Up_Y);
+        Renderer_DrawImage(&data->EyesImage_Down, 0, data->EyesImage_Down_Y);
+    }
 
     // [ 메뉴 ]
     if (data->isEscapeActive)
@@ -719,6 +775,8 @@ void release_title(void)
     Image_FreeImage(&data->LoadingBar);
     Image_FreeImage(&data->LoadingBarFrame);
     Image_FreeImage(&data->Black_Image);
+    Image_FreeImage(&data->EyesImage_Up);
+    Image_FreeImage(&data->EyesImage_Down);
 
     // [ 텍스트 ]
     for (int32 i = 0; i < 50; ++i)
