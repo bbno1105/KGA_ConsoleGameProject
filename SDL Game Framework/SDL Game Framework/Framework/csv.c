@@ -129,11 +129,10 @@ wchar_t* ParseToUnicode(const CsvItem item)
 	return result;
 }
 
-
 void csv_Init(void)
 {
 	memset(&csvFile, 0, sizeof(CsvFile));
-	CreateCsvFile(&csvFile, "Data.csv");
+	CreateCsvFile(&csvFile, "GoodmorningSylvester.csv");
 
 	// CSV 파일 파싱한 후 텍스트 그려본 다음 제대로 출력 안되면
 	// App_Init()에 아래 구문 추가
@@ -148,9 +147,6 @@ wchar_t* StringLine(wchar_t* string, wchar_t* stringl)
 
 	while (true)
 	{
-		if (*string == L'"') isString = !isString;
-		if (isString && *string == L'"') string++; // 문자열 표시 넘어감
-
 		if (*string == L'\n')
 		{
 			*stringl = NULL;

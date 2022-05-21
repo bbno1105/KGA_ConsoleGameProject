@@ -41,5 +41,6 @@ enum column
 	BGM,
 	SE,
 	SE_loop,
-	ImageFile_s
+	ImageFile_s,
+	Image_Time // 테이블에 추가되어야 함
 };
