@@ -45,21 +45,20 @@ void init_start(void)
     Start_Data* data = (Start_Data*)g_Scene.Data;
 
     //텍스트 만들기
-    Text_CreateText(&data->Title_Hyacinth, "HeirofLightBold.ttf", 50, L"히아신스의 신부", wcslen(L"히아신스의 신부"));
+    Text_CreateText(&data->Title_Hyacinth, "HeirofLightBold.ttf", 65, L"히아신스의 신부", wcslen(L"히아신스의 신부"));
 
     for (int32 i = 0; i < 3; ++i)
     {
         Text_CreateText(&data->StartMenu[i], "HeirofLightBold.ttf", 30, str1[i], wcslen(str1[i]));
     }
 
-    Image_LoadImage(&data->How_To_Operate, "HowToOperate.png");
-    Image_LoadImage(&data->Operate_Icon, "ICON.png");
 
     //이미지 로드
     Image_LoadImage(&data->Start_BackGround_Image, "Background.jpg");
     Image_LoadImage(&data->Start_Front_Image, "Main1.png");
     Image_LoadImage(&data->Icon, "ICON.png");
-
+    Image_LoadImage(&data->How_To_Operate, "HowToOperate.png");
+    Image_LoadImage(&data->Operate_Icon, "ICON.png");
     data->Start_Icon_X = 810;
     data->Start_Icon_Y = 710;
     data->Alpha = 255;
@@ -104,8 +103,8 @@ void render_start(void)
     //이미지 사이즈
     data->Start_BackGround_Image.Width = 1920;
     data->Start_BackGround_Image.Height = 1080;
-    data->Start_Front_Image.Width = 800;
-    data->Start_Front_Image.Height = 360;
+    data->Start_Front_Image.Width = 830;
+    data->Start_Front_Image.Height = 390;
     data->Icon.Width = 35;
     data->Icon.Height = 35;
     data->Operate_Icon.Width = 35;
@@ -113,13 +112,13 @@ void render_start(void)
     
     //이미지 투명도 및 이미지 출력
     Renderer_DrawImage(&data->Start_BackGround_Image, 0, 0);
-    Renderer_DrawImage(&data->Start_Front_Image, 560, 125);
+    Renderer_DrawImage(&data->Start_Front_Image, 520, 125);
     Renderer_DrawImage(&data->Icon, data->Start_Icon_X, data->Start_Icon_Y);
 
 
     //텍스트 출력
     SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha};
-    Renderer_DrawTextBlended(&data->Title_Hyacinth, 760, 490, color);
+    Renderer_DrawTextBlended(&data->Title_Hyacinth, 700, 550, color);
 
     int StartSelectText_Y[3] = { 700, 740, 780 };
     for (int32 i = 0; i < 3; ++i)
@@ -204,6 +203,17 @@ typedef struct TitleSceneData
     int32	Icon_Y;
     int32	Alpha;
     float   ImageActiveTime;
+
+    //Fade In/Out 관련
+    Image   Black_Image;
+    int32   FadeInOut_Alpha;
+    bool    FadeInOut_Alpha_bool;
+    //Eyes In/Out 관련
+    Image   EyesImage_Up;  
+    int32	EyesImage_Up_Y;
+    Image   EyesImage_Down;   
+    int32	EyesImage_Down_Y;
+    bool    EyesImage_bool;
 
     // 사운드관련
     bool    isBGM;
@@ -310,11 +320,19 @@ void init_title(void)
     Image_LoadImage(&data->BackGroundImage, "Background.jpg");
     Image_LoadImage(&data->Icon, "ICON.png");
     Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
+    Image_LoadImage(&data->Black_Image, "Black_Image.jpg");
+    Image_LoadImage(&data->EyesImage_Up, "up.png");
+    Image_LoadImage(&data->EyesImage_Down, "down.png");
 
     data->Icon_X = 170;
     data->Icon_Y = 855;
+    data->EyesImage_Up_Y = 0;
+    data->EyesImage_Down_Y = 380;
     data->Alpha;
+    data->FadeInOut_Alpha = 255;
     data->ImageActiveTime = 0.0f;
+    data->FadeInOut_Alpha_bool = false;
+    data->EyesImage_bool = false;
     data->SoundActiveTime = 0.0f;
 
     //Audio_LoadMusic(&data->BGM, "powerful.mp3");
@@ -364,7 +382,8 @@ void update_title(void)
         }
         elapsedTime = 0.0f;
     }
-    
+
+
     // 이미지 출력을 위한 델타타임
     data->ImageActiveTime += Timer_GetDeltaTime(); 
 
@@ -405,7 +424,7 @@ void update_title(void)
         {
             switch (data->SelectMenuValue)
             {
-            case 0 :
+            case 0:
                 LogInfo("선택1");
                 data->isEscapeActive = false;
                 break;
@@ -537,20 +556,80 @@ void update_title(void)
     }
 }
 
+            if (data->ID == 48 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == true)
+            {
+                data->FadeInOut_Alpha+=2;
+                FadeInOutElapsedTime = 0.0f;
+            }
+            if (data->FadeInOut_Alpha >= 255)
+            {
+                data->FadeInOut_Alpha = 255;
+                data->FadeInOut_Alpha_bool = false;
+            }
+    //    }
+    
+
+        ////눈 관련 델타타임
+        static float EyesElapsedTime;
+
+        EyesElapsedTime += Timer_GetDeltaTime();
+
+
+            if (data->ID == 2 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == false) // 함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+            {
+                data->EyesImage_Up_Y -= 4;
+                data->EyesImage_Down_Y += 4;
+
+                EyesElapsedTime = 0.0f;
+            }
+            if (data->EyesImage_Down_Y == 1080)
+            {
+                data->EyesImage_Up_Y = -700;
+                data->EyesImage_Down_Y = 1080;
+                data->EyesImage_bool = true;
+            }
+
+            if (data->ID == 48 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == true) //함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+            {
+                data->EyesImage_Up_Y += 4;
+                data->EyesImage_Down_Y -= 4;
+
+                EyesElapsedTime = 0.0f;
+            }
+            if (data->EyesImage_Up_Y == 0)
+            {
+                data->EyesImage_Up_Y = 0;
+                data->EyesImage_Down_Y = 380;
+                data->EyesImage_bool = false;
+            }
+}
+
+
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
+
+
     // [ 이미지 ]
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
-    Image_SetAlphaValue(&data->BackGroundImage, 125);
+    Image_SetAlphaValue(&data->BackGroundImage, 255);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
+
+
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
-        Renderer_DrawImage(&data->FrontImage, 1100, 200);
+        Renderer_DrawImage(&data->FrontImage, 980, 200);
     }
+
+
+
+
+    // [ 텍스트 ]
+    SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
+    Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
 
     // [ 텍스트 ]
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
@@ -568,12 +647,66 @@ void render_title(void)
         }
     }
 
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    {
+        Image_SetAlphaValue(&data->FrontImage, 255);
+        Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    }
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    {
+        Image_SetAlphaValue(&data->FrontImage, 255);
+        Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    }
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    {
+        Image_SetAlphaValue(&data->FrontImage, 255);
+        Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    }
+
     // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
     if (data->TextLine >= data->TotalLine)
     {
         // 선택지 출력
         int selectText_Y[3] = { 850, 890, 930 };
+
+    // [ 플레이어 데이터 ]
+    {
+        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+        Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1500, 150, color);
+    }
+
+    // 페이드 인/아웃 이미지, 눈 떴다/감았다 이미지 출력부분
+    if (data->ID == 2 || data->ID == 48)
+    {
+        data->Black_Image.Width = 1920;
+        data->Black_Image.Height = 1080;
+        Image_SetAlphaValue(&data->Black_Image, data->FadeInOut_Alpha);
+        Renderer_DrawImage(&data->Black_Image, 0, 0);
+
+        //data->EyesImage_Up.Width = 1920;
+        //data->EyesImage_Down.Width = 1920;
+        //data->Black_Image.Height = 1080;
+        Image_SetAlphaValue(&data->EyesImage_Up, 255);
+        Image_SetAlphaValue(&data->EyesImage_Down, 255);
+        Renderer_DrawImage(&data->EyesImage_Up, 0, data->EyesImage_Up_Y);
+        Renderer_DrawImage(&data->EyesImage_Down, 0, data->EyesImage_Down_Y);
+    }
 
 		for (int i = 0; i < 3; i++)
 		{
@@ -590,45 +723,10 @@ void render_title(void)
             }
 		}        
         
+        // 아이콘 출력
         data->Icon.Width = 30;
         data->Icon.Height = 30; //아이콘 이미지 사이즈 조절
         Image_SetAlphaValue(&data->Icon, 255);
-        Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
-    }
-
-    // [ 로딩 바 ]
-    if (data->isLoading)
-    {
-        SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
-        Renderer_DrawImage(&data->LoadingBar, 660, 1000, color);
-        Renderer_DrawImage(&data->LoadingBarFrame, 660, 1000, color);
-    }
-
-    // [ 플레이어 데이터 ]
-    {
-        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
-        Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1500, 150, color);
-    }
-
-    // [ 메뉴 ]
-    {
-        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
-        Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
-    }
-
-    if (data->isEscapeActive)
-    {
-        // 메뉴 출력
-        Renderer_DrawImage(&data->MenuImage, 0, 0);
-        for (int i = 0; i < 3; i++)
-        {
-            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
-            Renderer_DrawTextBlended(&data->SelectMenu[i], 850, 500 + (i * 90), color);
-        }
-        data->MenuIcon.Width = 30;
-        data->MenuIcon.Height = 30;
-        Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
-    }
 
     // [ 사운드 ]
     // 시간이 흐르면
@@ -670,6 +768,36 @@ void render_title(void)
     // 페이드 인
 
     // 페이드 아웃
+    }
+
+    // [ 로딩 바 ]
+    if (data->isLoading)
+    {
+        SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
+        Renderer_DrawImage(&data->LoadingBar, 660, 1000, color);
+        Renderer_DrawImage(&data->LoadingBarFrame, 660, 1000, color);
+    }
+
+    // [ 메뉴 ]
+    {
+        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+        Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
+    }
+
+    if (data->isEscapeActive)
+    {
+        // 메뉴 출력
+        Renderer_DrawImage(&data->MenuImage, 0, 0);
+        for (int i = 0; i < 3; i++)
+        {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextBlended(&data->SelectMenu[i], 850, 500 + (i * 90), color);
+        }
+        data->MenuIcon.Width = 30;
+        data->MenuIcon.Height = 30;
+        Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
+    }
+  
 }
 
 void release_title(void)
@@ -690,6 +818,9 @@ void release_title(void)
     // [ 로딩바 ]
     Image_FreeImage(&data->LoadingBar);
     Image_FreeImage(&data->LoadingBarFrame);
+    Image_FreeImage(&data->Black_Image);
+    Image_FreeImage(&data->EyesImage_Up);
+    Image_FreeImage(&data->EyesImage_Down);
 
     // [ 텍스트 ]
     for (int32 i = 0; i < 50; ++i)
@@ -719,24 +850,113 @@ void release_title(void)
 
 #pragma region Ending_Credits_Scene
 
+const wchar_t* str2[] = {
+    L"ENDING CREDITS",
+    L"",
+    L"   히아신스의 신부",
+    L"",
+    L"             기획",
+    L"           김준영",
+    L"           박수현",
+    L"           홍혁기",
+    L"",
+    L"             개발",
+    L"           안중재",
+    L"           문수진",
+    L"           이수연"
+};
+
+typedef struct Ending_Credits_Data
+{
+    Text        Ending_Credits_Text[13];
+    int32		Ending_Credits_Text_X;
+    int32		Ending_Credits_Text_Y;
+    int32		Alpha;
+    Image		Ending_Credits_BackGround_Image;
+    Image		Ending_Credits_Front_Image;
+}Ending_Credits_Data;
+
 void init_credits(void)
 {
+    g_Scene.Data = malloc(sizeof(Ending_Credits_Data));
+    memset(g_Scene.Data, 0, sizeof(Ending_Credits_Data));
+
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
+
+    //텍스트 만들기
+    for (int32 i = 0; i < 13; ++i)
+    {
+        Text_CreateText(&data->Ending_Credits_Text[i], "HeirofLightBold.ttf", 30, str2[i], wcslen(str2[i]));
+    }
+
+    //배경이미지 로드
+    Image_LoadImage(&data->Ending_Credits_BackGround_Image, "Background.jpg");
+    Image_LoadImage(&data->Ending_Credits_Front_Image, "ending_front_image.png");
+
+    data->Ending_Credits_Text_X = 790;
+    data->Ending_Credits_Text_Y = 1000;
+    data->Alpha = 225;
 
 }
 
 void update_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
+
+
+    // 크레딧 올리기
+    static float elapsedTime;
+    elapsedTime += Timer_GetDeltaTime();
+
+    for (int i = data->Ending_Credits_Text_Y; i > 200; i--)
+    {
+        if (elapsedTime >= 0.01f)
+        {
+            data->Ending_Credits_Text_Y = data->Ending_Credits_Text_Y-1;
+            
+            elapsedTime = 0.0f;
+        }
+    }
+
+    if (Input_GetKeyDown(VK_SPACE))
+    {
+        Scene_SetNextScene(SCENE_START);
+    }
 
 }
 
 void render_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+    //배경 출력
+    data->Ending_Credits_BackGround_Image.Width = 1920;
+    data->Ending_Credits_BackGround_Image.Height = 1080;
+    Renderer_DrawImage(&data->Ending_Credits_BackGround_Image, 0, 0);
+
+    // 텍스트 출력
+    for (int32 i = 0; i < 13; ++i)
+    {
+        SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = data->Alpha };
+        Renderer_DrawTextBlended(&data->Ending_Credits_Text[i], data->Ending_Credits_Text_X, data->Ending_Credits_Text_Y + 50 * i, color);
+    }
+
+    //data->Ending_Credits_Front_Image.Width = 1920;
+    //data->Ending_Credits_Front_Image.Height = 1080;
+    Renderer_DrawImage(&data->Ending_Credits_Front_Image, 0, 0);
 }
 
 void release_credits(void)
 {
+    Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+    //텍스트 반환
+    for (int32 i = 0; i < 13; ++i)
+    {
+        Text_FreeText(&data->Ending_Credits_Text[i]);
+    }
+
+    SafeFree(g_Scene.Data);
 }
 #pragma endregion
 
