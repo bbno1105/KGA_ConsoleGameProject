@@ -15,3 +15,5 @@
 #define Max(lhs, rhs) ((lhs > rhs) ? (lhs) : (rhs))
 // value를 [minValue, maxValue]로 만든다.
 #define Clamp(minValue, value, maxValue) (Max(minValue, Min(value, maxValue)))
+
+#define SetCoord(coord, x, y) { (coord).X; (coord).Y; }

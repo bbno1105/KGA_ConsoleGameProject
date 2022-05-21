@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Text.h"
+#include "Framework.h"
 
 static char s_path[MAX_PATH];
 
@@ -62,4 +63,41 @@ void Text_SetFontStyle(Text* text, EFontStyle style)
 EFontStyle Text_GetFontStyle(const Text* text)
 {
 	return (EFontStyle)TTF_GetFontStyle(text->Font);
+}
+
+
+void TextEffext_1(Text* text)
+{
+	text->ElapsedTime += Timer_GetDeltaTime();
+	if (text->ElapsedTime >= 0.5f)
+	{
+		text->ElapsedTime = 0;
+		int32 x = Random_GetNumberFromRange(10, 30);
+		int32 y = Random_GetNumberFromRange(10, 30);
+		SetCoord(text->TextCoord, x, y);
+	}
+}
+
+void TextEffext_2(Text* text)
+{
+	text->ElapsedTime += Timer_GetDeltaTime();
+	if (text->ElapsedTime >= 0.5f)
+	{
+		text->ElapsedTime = 0;
+		int32 x = Random_GetNumberFromRange(10, 30);
+		int32 y = Random_GetNumberFromRange(10, 30);
+		SetCoord(text->TextCoord, x, y);
+	}
+}
+
+void TextEffext_3(Text* text)
+{
+	text->ElapsedTime += Timer_GetDeltaTime();
+	if (text->ElapsedTime >= 0.5f)
+	{
+		text->ElapsedTime = 0;
+		int32 x = Random_GetNumberFromRange(10, 30);
+		int32 y = Random_GetNumberFromRange(10, 30);
+		SetCoord(text->TextCoord, x, y);
+	}
 }

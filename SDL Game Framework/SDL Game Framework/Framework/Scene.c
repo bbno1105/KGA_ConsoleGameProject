@@ -178,22 +178,27 @@ typedef struct TitleSceneData
 	Image   LoadingBar;
 	bool    isLoading;
 
-	// 텍스트 관련
-	Text    GuideLine[50];          // [id][줄바꿈]
-	int32   TextLine;               // 텍스트 줄
-	int32   TotalLine;              // 총 몇줄인지 체크
-	int32   FontSize;
-	int32   RenderMode;
+    // 텍스트 관련
+    Text    GuideLine[50];          // [id][줄바꿈]
+    int32   TextLine;               // 텍스트 줄
+    int32   TotalLine;              // 총 몇줄인지 체크
+    int32   FontSize;
+    int32   RenderMode;
+    int32   TextEffect;             // 몇번 이펙트인지
+    float   TextEffectElapsedTime;
+    COORD   TextCoord;
+    int32   Text_X;
+    int32   Text_Y;
 	bool    isSkip;
 
-	// 선택지관련
-	int32	Pointer_X;
-	int32	Pointer_Y;
-	Text    SelectText[3];       // [선택지3개][선택지글자개수]
-	int32   SelectId;            // 씬 인덱스
-	int32   SelectMovingPage[3]; // 씬 전환값
-	bool    MovingPageSelected[200][3];   // 선택지 선택여부를 위한 변수
-	int32   selectIDCount;
+    // 선택지관련
+    int32	Pointer_X;
+    int32	Pointer_Y;
+    Text    SelectText[3];       // [선택지3개][선택지글자개수]
+    int32   SelectId;            // 씬 인덱스
+    int32   SelectMovingPage[3]; // 씬 전환값
+    bool    MovingPageSelected[200][3];   // 선택지 선택여부를 위한 변수
+    int32   selectIDCount;
 
 	// 이미지관련
 	Image   BackGroundImage;
@@ -266,6 +271,7 @@ void init_title(void)
 	data->TotalLine = 0;
 	data->isSkip = false;
 	memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
+    data->TextEffect = 0;
 
 	// testtext에 Test_s 내용추가
 	wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
@@ -340,9 +346,11 @@ void init_title(void)
 	data->FadeInOut_Alpha_bool = true;
 	data->EyesImage_bool = true;
 
-	//Audio_LoadMusic(&data->BGM, "powerful.mp3");
-	//Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
+    data->Text_X = 0;
+    data->Text_Y = 0;
 }
+
+    
 
 void update_title(void)
 {
@@ -433,18 +441,33 @@ void update_title(void)
 	static float elapsedTime;
 	elapsedTime += Timer_GetDeltaTime();
 
-	// 시간이 증가하면 텍스트 줄 값++
-	if (elapsedTime >= 1.0f)
-	{
-		if (data->TextLine < 20)
-		{
-			data->TextLine++;
-		}
-		elapsedTime = 0.0f;
-	}
-
-	// 이미지 출력을 위한 델타타임
-	data->ImageActiveTime += Timer_GetDeltaTime();
+    // 시간이 증가하면 텍스트 줄 값++
+    data->TextEffect = ParseToInt(csvFile.Items[data->ID + 1][TextEffect_i]);
+    if (data->TextEffect == 4 && data->TextLine >= ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]))
+    {
+        if (elapsedTime >= 0.1f)
+        {
+            if (data->TextLine < 20)
+            {
+                data->TextLine++;
+            }
+            elapsedTime = 0.0f;
+        }
+    }
+    else
+    {
+        if (elapsedTime >= 1.0f)
+        {
+            if (data->TextLine < 20)
+            {
+                data->TextLine++;
+            }
+            elapsedTime = 0.0f;
+        }
+    }
+    
+    // 이미지 출력을 위한 델타타임
+    data->ImageActiveTime += Timer_GetDeltaTime(); 
 
 	// SE 출력을 위한 델타타임
 	data->SoundActiveTime += Timer_GetDeltaTime();
@@ -615,6 +638,47 @@ void update_title(void)
 		data->isSE = true;
 		Audio_StopSoundEffect();
 	}
+        //// [ 사운드 ]
+        //if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+        //{
+        //    strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+        //    Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+        //    Audio_Play(&data->BGM, INFINITY_LOOP);
+        //}
+        //Audio_StopSoundEffect();
+        //if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+        //{
+        //    Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+        //    if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+        //    {
+        //        Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+        //    }
+        //    else
+        //    {
+        //        Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+        //    }
+        //}
+        //LogInfo("Now ID Loading... %d", data->ID);
+    }
+
+	// 텍스트 효과 123
+	switch (data->TextEffect)
+	{
+	case 1:
+	{
+		int random = rand() % 5 + 1;
+		data->Text_X = random;
+		data->Text_Y = -1 * random;
+		break;
+	}
+	case 2:
+		data->Text_X = rand() % 5 + 1;
+		break;
+	case 3:
+		data->Text_Y = rand() % 5 + 1;
+		break;
+	}
+
 }
 
 void render_title(void)
@@ -634,25 +698,98 @@ void render_title(void)
 	}
 
 	// [ 메뉴 ]
-	SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
+	SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
 	Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
 
-	// [ 텍스트 ]
-	// 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
-	for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
-	{
-		if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1 == data->TotalLine)
-		{
-			SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
-			Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-		}
-		else
-		{
-			SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
-			Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-		}
-	}
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
+    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
+    {
+        //  업데이트에서 지정한 텍스트 라인 = cvs의 텍스트 라인일 때
+        if (data->TextLine == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i])) 
+        {
+            // 일단 텍스트 이펙트에 cvs의 텍스트 이펙트 집어넣어!
+            
 
+            if (data->TextEffect == 1)
+            {
+                // 텍스트 흔들림 1
+                if (i != ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+            }
+
+            if (data->TextEffect == 2)
+            {
+                // 텍스트 흔들림 1
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            if (data->TextEffect == 3)
+            {
+                // 텍스트 흔들림 1
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            if (data->TextEffect == 4)
+            {
+                // 텍스트 속도 빨라짐
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            if (data->TextEffect == 5)
+            {
+                // 텍스트 속도 빨라짐
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Text_SetFontStyle(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], FS_BOLD);
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            
+        }
+        else if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
+        {
+            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+        else 
+        {
+            SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+        //asdf
+    }
 	// [ 플레이어 데이터 ]
 	{
 		SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
