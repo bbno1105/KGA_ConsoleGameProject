@@ -158,11 +158,12 @@ void release_start(void)
 
 typedef struct TitleSceneData
 {
-    // 모두 관련
+    // 플레이어 데이터
     int32   ID;
     int32   PlayerDieCount;
     bool    isPlayerReturn;
     int32   PlayerReturnPoint;
+    Text    PlayerReturnCountText;
 
     // 메뉴
     Image   MenuImage;
@@ -332,6 +333,12 @@ void update_title(void)
         return;
     }
 
+    wchar_t playerRetrunCountText[50] = L"";
+    wchar_t playerReturnCount[10] = L"";
+    wcscat(playerRetrunCountText, L"플레이어 회귀 횟수 : ");
+    _itow(data->PlayerDieCount, playerReturnCount, 10);
+    wcscat(playerRetrunCountText, playerReturnCount);
+    Text_CreateText(&data->PlayerReturnCountText, "HeirofLightBold.ttf", 20, playerRetrunCountText, wcslen(playerRetrunCountText));
     bool RefreshScene = false;
 
     // 델타타임 적용
@@ -535,25 +542,6 @@ void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    // [ 텍스트 ]
-    SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
-    Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
-
-    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
-    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
-    {
-        if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
-        {
-            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-        else 
-        {
-            SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-    }
-
     // [ 이미지 ]
     data->BackGroundImage.Width = 1920;
     data->BackGroundImage.Height = 1080;
@@ -563,6 +551,22 @@ void render_title(void)
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    }
+
+    // [ 텍스트 ]
+    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
+    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
+    {
+        if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
+        {
+            SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
+        else 
+        {
+            SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+        }
     }
 
     // [ 선택지 ]
@@ -596,24 +600,36 @@ void render_title(void)
     // [ 로딩 바 ]
     if (data->isLoading)
     {
+        SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 200 };
         Renderer_DrawImage(&data->LoadingBar, 660, 1000, color);
         Renderer_DrawImage(&data->LoadingBarFrame, 660, 1000, color);
     }
 
+    // [ 플레이어 데이터 ]
+    {
+        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+        Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1500, 150, color);
+    }
+
     // [ 메뉴 ]
+    {
+        SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+        Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
+    }
+
     if (data->isEscapeActive)
     {
         // 메뉴 출력
         Renderer_DrawImage(&data->MenuImage, 0, 0);
         for (int i = 0; i < 3; i++)
         {
+            SDL_Color color = { .r = 0, .g = 0, .b = 0, .a = 255 };
             Renderer_DrawTextBlended(&data->SelectMenu[i], 850, 500 + (i * 90), color);
         }
         data->MenuIcon.Width = 30;
         data->MenuIcon.Height = 30;
         Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
     }
-  
 
     // 페이드 인
 
@@ -623,13 +639,19 @@ void render_title(void)
 void release_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
-
-    // [ 이미지 ] 
+    // [ 플레이어 데이터 ]
+    Text_FreeText(&data->PlayerReturnCountText);
+    
+    // [ 메뉴 ]
     Image_FreeImage(&data->MenuImage);
-    Image_FreeImage(&data->BackGroundImage);
-    Image_FreeImage(&data->FrontImage);
-    Image_FreeImage(&data->Icon);
+    Text_FreeText(&data->Escape);
+    for (int i = 0; i < 3; i++)
+    {
+        Text_FreeText(&data->SelectMenu[i]);
+    }
     Image_FreeImage(&data->MenuIcon);
+
+    // [ 로딩바 ]
     Image_FreeImage(&data->LoadingBar);
     Image_FreeImage(&data->LoadingBarFrame);
 
@@ -644,7 +666,12 @@ void release_title(void)
     {
         Text_FreeText(&data->SelectText[i]);
     }
- 
+
+    // [ 이미지 ] 
+    Image_FreeImage(&data->BackGroundImage);
+    Image_FreeImage(&data->FrontImage);
+    Image_FreeImage(&data->Icon);
+
     // [ 사운드 ]
     Audio_FreeMusic(&data->BGM);
     Audio_FreeSoundEffect(&data->SE);
