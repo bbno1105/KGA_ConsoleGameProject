@@ -351,7 +351,7 @@ void update_title(void)
 
     // 시간이 증가하면 텍스트 줄 값++
     data->TextEffect = ParseToInt(csvFile.Items[data->ID + 1][TextEffect_i]);
-    if (data->TextEffect == 4)
+    if (data->TextEffect == 4 && data->TextLine >= ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]))
     {
         if (elapsedTime >= 0.1f)
         {
@@ -657,6 +657,22 @@ void render_title(void)
                     Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
                 }
             }
+
+            if (data->TextEffect == 5)
+            {
+                // 텍스트 속도 빨라짐
+                if (i == ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1)
+                {
+                    Text_SetFontStyle(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], FS_BOLD);
+                    Renderer_DrawTextBlended(&data->GuideLine[ParseToInt(csvFile.Items[data->ID + 1][TextLine_i]) - 1], 200 + data->Text_X, 200 + 40 * i + data->Text_Y, color);
+                }
+                else
+                {
+                    Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
+                }
+            }
+
+            
         }
         else if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
         {
