@@ -43,6 +43,7 @@ enum column
 	BGM,
 	SE,
 	SE_loop,
+	SoundTime,
 	ImageFile_s,
 	Image_Time_i
 };

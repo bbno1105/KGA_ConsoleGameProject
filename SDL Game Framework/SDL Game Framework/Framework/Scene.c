@@ -186,7 +186,6 @@ typedef struct TitleSceneData
     int32   RenderMode;
     int32   TextEffect;             // 몇번 이펙트인지
     float   TextEffectElapsedTime;
-    COORD   TextCoord;
     int32   Text_X;
     int32   Text_Y;
 	bool    isSkip;
@@ -659,7 +658,6 @@ void update_title(void)
         //    }
         //}
         //LogInfo("Now ID Loading... %d", data->ID);
-    }
 
 	// 텍스트 효과 123
 	switch (data->TextEffect)
@@ -698,7 +696,7 @@ void render_title(void)
 	}
 
 	// [ 메뉴 ]
-	SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
+	SDL_Color color = { .r = 100, .g = 85, .b = 70,  .a = 255 };
 	Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
 
     // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
@@ -785,14 +783,14 @@ void render_title(void)
         }
         else 
         {
-            SDL_Color color = { .r = 90, .g = 85, .b = 70,  .a = 255 };
+            SDL_Color color = { .r = 100, .g = 85, .b = 70,  .a = 255 };
             Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
         //asdf
     }
 	// [ 플레이어 데이터 ]
 	{
-		SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+		SDL_Color color = { .r = 100, .g = 85, .b = 70, .a = 255 };
 		Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1550, 150, color);
 	}
 
@@ -838,7 +836,7 @@ void render_title(void)
 		data->isBGM = false;
 	}
 
-	if (data->SoundActiveTime > 3 && data->isSE)
+	if (data->SoundActiveTime > ParseToInt(csvFile.Items[data->ID + 1][SoundTime]) && data->isSE)
 	{
 		if (!data->isSkip)
 		{
@@ -870,7 +868,7 @@ void render_title(void)
 
 	// [ 메뉴 ]
 	{
-		SDL_Color color = { .r = 90, .g = 85, .b = 70, .a = 255 };
+		SDL_Color color = { .r = 100, .g = 85, .b = 70, .a = 255 };
 		Renderer_DrawTextBlended(&data->Escape, 1650, 100, color); // 메뉴 : ESC
 	}
 
@@ -922,11 +920,8 @@ void release_title(void)
 	Image_FreeImage(&data->MenuIcon);
 
 	// [ 로딩바 ]
-	Image_FreeImage(&data->LoadingBar);
 	Image_FreeImage(&data->LoadingBarFrame);
-	Image_FreeImage(&data->Black_Image);
-	Image_FreeImage(&data->EyesImage_Up);
-	Image_FreeImage(&data->EyesImage_Down);
+	Image_FreeImage(&data->LoadingBar);
 
 	// [ 텍스트 ]
 	for (int32 i = 0; i < 50; ++i)
@@ -944,6 +939,11 @@ void release_title(void)
 	Image_FreeImage(&data->BackGroundImage);
 	Image_FreeImage(&data->FrontImage);
 	Image_FreeImage(&data->Icon);
+
+	// [ Fade In/Out ]
+	Image_FreeImage(&data->Black_Image);
+	Image_FreeImage(&data->EyesImage_Up);
+	Image_FreeImage(&data->EyesImage_Down);
 
 	// [ 사운드 ]
 	Audio_FreeMusic(&data->BGM);
