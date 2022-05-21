@@ -554,54 +554,51 @@ void update_title(void)
             }
         }
     }
-}
 
-            if (data->ID == 48 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == true)
-            {
-                data->FadeInOut_Alpha+=2;
-                FadeInOutElapsedTime = 0.0f;
-            }
-            if (data->FadeInOut_Alpha >= 255)
-            {
-                data->FadeInOut_Alpha = 255;
-                data->FadeInOut_Alpha_bool = false;
-            }
-    //    }
+    if (data->ID == 48 && FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool == true)
+    {
+        data->FadeInOut_Alpha+=2;
+        FadeInOutElapsedTime = 0.0f;
+    }
+    if (data->FadeInOut_Alpha >= 255)
+    {
+        data->FadeInOut_Alpha = 255;
+        data->FadeInOut_Alpha_bool = false;
+    }
     
+    ////눈 관련 델타타임
+    static float EyesElapsedTime;
 
-        ////눈 관련 델타타임
-        static float EyesElapsedTime;
-
-        EyesElapsedTime += Timer_GetDeltaTime();
+    EyesElapsedTime += Timer_GetDeltaTime();
 
 
-            if (data->ID == 2 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == false) // 함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
-            {
-                data->EyesImage_Up_Y -= 4;
-                data->EyesImage_Down_Y += 4;
+        if (data->ID == 2 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == false) // 함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+        {
+            data->EyesImage_Up_Y -= 4;
+            data->EyesImage_Down_Y += 4;
 
-                EyesElapsedTime = 0.0f;
-            }
-            if (data->EyesImage_Down_Y == 1080)
-            {
-                data->EyesImage_Up_Y = -700;
-                data->EyesImage_Down_Y = 1080;
-                data->EyesImage_bool = true;
-            }
+            EyesElapsedTime = 0.0f;
+        }
+        if (data->EyesImage_Down_Y == 1080)
+        {
+            data->EyesImage_Up_Y = -700;
+            data->EyesImage_Down_Y = 1080;
+            data->EyesImage_bool = true;
+        }
 
-            if (data->ID == 48 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == true) //함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
-            {
-                data->EyesImage_Up_Y += 4;
-                data->EyesImage_Down_Y -= 4;
+        if (data->ID == 48 && EyesElapsedTime >= 0.01f && data->EyesImage_bool == true) //함수 설정했을땐 ID 조건을 지우고 함수를 호출했을때로 변경
+        {
+            data->EyesImage_Up_Y += 4;
+            data->EyesImage_Down_Y -= 4;
 
-                EyesElapsedTime = 0.0f;
-            }
-            if (data->EyesImage_Up_Y == 0)
-            {
-                data->EyesImage_Up_Y = 0;
-                data->EyesImage_Down_Y = 380;
-                data->EyesImage_bool = false;
-            }
+            EyesElapsedTime = 0.0f;
+        }
+        if (data->EyesImage_Up_Y == 0)
+        {
+            data->EyesImage_Up_Y = 0;
+            data->EyesImage_Down_Y = 380;
+            data->EyesImage_bool = false;
+        }
 }
 
 
@@ -618,7 +615,7 @@ void render_title(void)
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
 
 
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 980, 200);
@@ -652,7 +649,7 @@ void render_title(void)
     data->BackGroundImage.Height = 1080;
     Image_SetAlphaValue(&data->BackGroundImage, 125);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
@@ -662,7 +659,7 @@ void render_title(void)
     data->BackGroundImage.Height = 1080;
     Image_SetAlphaValue(&data->BackGroundImage, 125);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
@@ -672,7 +669,7 @@ void render_title(void)
     data->BackGroundImage.Height = 1080;
     Image_SetAlphaValue(&data->BackGroundImage, 125);
     Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time]))
+    if (data->ImageActiveTime > ParseToInt(csvFile.Items[data->ID + 1][Image_Time_i]))
     {
         Image_SetAlphaValue(&data->FrontImage, 255);
         Renderer_DrawImage(&data->FrontImage, 1100, 200);
