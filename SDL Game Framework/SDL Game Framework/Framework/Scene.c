@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Scene.h"
-
+#include "Game/TextData.h"
 #include "Framework.h"
 
 Scene g_Scene;
@@ -74,19 +74,14 @@ typedef struct TitleSceneData
     // 모두 관련
     int32   ID;
 
-    // 텍스트 관련
-    Text    GuideLine[50];          // [id][줄바꿈]
-    int32   TextLine;               // 텍스트 줄
-    int32   TotalLine;              // 총 몇줄인지 체크
-    int32   FontSize;
-    int32   RenderMode;
+    TextData TextData;
 
     // 선택지관련
     int32	Pointer_X;
     int32	Pointer_Y;
     Text    SelectText[3];       // [선택지3개][선택지글자개수]
-    int32   SelectId;            // 씬 인덱스
-    int32   SelectMovingPage[3]; // 씬 전환값
+    int32   MovingPageNumberIndex;            // 씬 인덱스
+    int32   SelectMovingPageNumber[3]; // 전환 씬 넘버
     bool    MovingPageSelected[200][3];   // 선택지 선택여부를 위한 변수
     int32   selectIDCount;
 
@@ -120,38 +115,23 @@ void init_title(void)
 
 
     // [ 텍스트 ]
-    data->TextLine = 0;         // ID안의 텍스트 줄 0부터 시작
-    data->FontSize = 18;        // 데이터 폰트 사이즈 설정
-    data->RenderMode = SOLID;   // 랜더보드 : 글자만 나오게
-    data->TotalLine = 0;
+    TextData_Init(&data->TextData);
+
     memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
-
-    // testtext에 Test_s 내용추가
-    wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
-
-    for (int32 i = 0; i < 20; ++i)
-    {
-        wchar_t stringl[500] = L""; //텍스트 줄 저장
-        IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
-        Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
-        data->TotalLine++;
-        
-        if (*IdText == NULL)
-        {
-            break; // 토탈라인 플러스 되는거 멈춤
-        }
-    }
-
+    wchar_t* idText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]);
+    SaveOneTextLine(&data->TextData, idText);
+    SafeFree(idText);
+    
     // [ 선택지 ]
-    data->SelectId = 0;
+    data->MovingPageNumberIndex = 0;// 선택한 선택지 0으로 초기화
     // SelectText 1, 2, 3에 각각의 cvs select1, 2, 3 문자열 넣음
     Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
     Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
     Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
     // SelectMovingPage 1, 2, 3에 각각의 cvs [MovingPage 1, 2, 3 문자열 넣음
-    data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
-    data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
-    data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
+    data->SelectMovingPageNumber[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+    data->SelectMovingPageNumber[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+    data->SelectMovingPageNumber[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
     
     // [ 사운드 ]
     // BGM
@@ -193,134 +173,93 @@ void update_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-    // 델타타임 적용
-    static float elapsedTime;
-    elapsedTime += Timer_GetDeltaTime();
-
-    // 시간이 증가하면 텍스트 줄 값++
-    if (elapsedTime >= 1.0f)
-    {
-        if (data->TextLine < 20)
-        {
-            data->TextLine++;
-        }
-        elapsedTime = 0.0f;
-    }
 
     // 다음페이지 넘김 or 텍스트 스킵
     if (Input_GetKeyDown(VK_SPACE))
-    {
-        if (data->TextLine < data->TotalLine)
-        {
-            data->TextLine = data->TotalLine;
-        }
-        else
-        {
+	{
+		data->MovingPageSelected[data->ID][data->MovingPageNumberIndex] = true;
+		data->ID = data->SelectMovingPageNumber[data->MovingPageNumberIndex];         // ID 다음으로 넘어감
+		data->Icon_X = 170;
+		data->Icon_Y = 855;
 
-            data->MovingPageSelected[data->ID][data->SelectId] = true;
-            data->ID = data->SelectMovingPage[data->SelectId];         // ID 다음으로 넘어감
-            data->TextLine = 0; // 텍스트줄 0초기화
-            data->TotalLine = 0; // 총 몇줄인지 체크
-            data->SelectId = 0; // 선택한 선택지 0으로 초기화
-            data->Icon_X = 170;
-            data->Icon_Y = 855;
+		Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
 
-            Image_LoadImage(&data->FrontImage, ParseToAscii(csvFile.Items[data->ID + 1][ImageFile_s]));
+		// [ 선택지 ]
+		Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
+		Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
+		Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
+		data->SelectMovingPageNumber[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
+		data->SelectMovingPageNumber[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
+		data->SelectMovingPageNumber[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
 
-            wchar_t* IdText = ParseToUnicode(csvFile.Items[data->ID + 1][Text_s]); // csvFile.Items[ID+1][컬럼명]
+		// [ 사운드 ]
+		if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+		{
+			strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+			Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
+			Audio_Play(&data->BGM, INFINITY_LOOP);
+		}
+		Audio_StopSoundEffect();
+		if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
+		{
+			Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+			if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
+			{
+				Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+			}
+			else
+			{
+				Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+			}
+		}
+		LogInfo("Now ID Loading... %d", data->ID);
+	}
 
-            for (int32 i = 0; i < 20; ++i)
-            {
-                wchar_t stringl[500] = L""; //텍스트 줄 저장
-                IdText = StringLine(IdText, stringl); // IdText안에서 널문자 만날 때 마다 스트링 저장
-                Text_CreateText(&data->GuideLine[i], "HeirofLightBold.ttf", data->FontSize, stringl, wcslen(stringl));//스트링 출력
-                data->TotalLine++;
-
-                if (*IdText == NULL)
-                {
-                    break; // 토탈라인 플러스 되는거 멈춤
-                }
-            }
-
-            // [ 선택지 ]
-            Text_CreateText(&data->SelectText[0], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select1_s])));
-            Text_CreateText(&data->SelectText[1], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select2_s])));
-            Text_CreateText(&data->SelectText[2], "HeirofLightBold.ttf", 25, ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s]), wcslen(ParseToUnicode(csvFile.Items[data->ID + 1][Select3_s])));
-            data->SelectMovingPage[0] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]);
-            data->SelectMovingPage[1] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage2_i]);
-            data->SelectMovingPage[2] = ParseToInt(csvFile.Items[data->ID + 1][MovingPage3_i]);
-            
-            // [ 사운드 ]
-            if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
-            {
-                strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-                Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
-                Audio_Play(&data->BGM, INFINITY_LOOP);
-            }
-            Audio_StopSoundEffect();
-            if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
-            {
-                Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
-                if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
-                {
-                    Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
-                }
-                else
-                {
-                    Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
-                }
-            }
-            LogInfo("Now ID Loading... %d", data->ID);
-        }
-
-        // [ 선택지 ]
-        data->selectIDCount = 0;
-        for (int i = 1; i < 3; i++)
-        {
-            if (data->SelectMovingPage[i] > 0)
-            {
-                data->selectIDCount++;
-            }
-        }
-    }
+	// [ 선택지 ] 
+	data->selectIDCount = 0;
+	for (int i = 1; i < 3; i++)
+	{
+		if (data->SelectMovingPageNumber[i] > 0)
+		{
+			data->selectIDCount++;
+		}
+	}    
 
     // 방향키를 눌러 선택할 위치 변경
-    if (Input_GetKeyDown(VK_UP) && data->SelectId > 0)
+    if (Input_GetKeyDown(VK_UP) && data->MovingPageNumberIndex > 0)
     {
-        data->SelectId--;
-        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->MovingPageNumberIndex--;
+        LogInfo("SelectId : %d", data->SelectMovingPageNumber[data->MovingPageNumberIndex]);
         data->Icon_Y -= 40;
     }
-    if (Input_GetKeyDown(VK_DOWN) && data->SelectId < data->selectIDCount)
+    if (Input_GetKeyDown(VK_DOWN) && data->MovingPageNumberIndex < data->selectIDCount)
     {
-        data->SelectId++;
-        LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
+        data->MovingPageNumberIndex++;
+        LogInfo("SelectId : %d", data->SelectMovingPageNumber[data->MovingPageNumberIndex]);
         data->Icon_Y += 40;
     }
+
+    TextData_Update(&data->TextData, data->ID);
 }
 
 void render_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
+    // [ 이미지 ]
+    data->BackGroundImage.Width = 1920;
+    data->BackGroundImage.Height = 1080;
+    Image_SetAlphaValue(&data->FrontImage, 255);
+    Image_SetAlphaValue(&data->BackGroundImage, 125);
+
+    Renderer_DrawImage(&data->FrontImage, 1100, 200);
+    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
+
     // [ 텍스트 ]
-    // 델타타임이 늘어남에 따라 늘어난 텍스트 줄 만큼 출력
-    for (int32 i = 0; i < data->TextLine && i < data->TotalLine; i++)
-    {
-        if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
-        {
-            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-        else 
-        {
-            SDL_Color color = { .r = 0, .g = 0, .b = 0,  .a = 255 };
-            Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
-        }
-    }
+    TextData_Render(&data->TextData, data->ID);
 
     // [ 선택지 ]
     // 텍스트 줄에 아무것도 없으면 선택지 3줄 출력
-    if (data->TextLine >= data->TotalLine)
+    if (data->TextData.TextLine >= data->TextData.TotalLine)
     {
         // 선택지 출력
         int selectText_Y[3] = { 850, 890, 930 };
@@ -346,14 +285,6 @@ void render_title(void)
         Renderer_DrawImage(&data->Icon, data->Icon_X, data->Icon_Y);
     }
   
-    // [ 이미지 ]
-    data->BackGroundImage.Width = 1920;
-    data->BackGroundImage.Height = 1080;
-    Image_SetAlphaValue(&data->FrontImage, 255);
-    Image_SetAlphaValue(&data->BackGroundImage, 125);
-
-    Renderer_DrawImage(&data->BackGroundImage, 0, 0);
-    Renderer_DrawImage(&data->FrontImage, 1100, 200);
 }
 
 void release_title(void)
@@ -361,10 +292,7 @@ void release_title(void)
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
     // [ 텍스트 ]
-    for (int32 i = 0; i < 50; ++i)
-    {
-        Text_FreeText(&data->GuideLine[i]);
-    }
+    TextData_Release(&data->TextData);
 
     // [ 선택지 ]
     for (int32 i = 0; i < 3; ++i)

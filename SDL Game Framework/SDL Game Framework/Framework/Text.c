@@ -63,3 +63,4 @@ EFontStyle Text_GetFontStyle(const Text* text)
 {
 	return (EFontStyle)TTF_GetFontStyle(text->Font);
 }
+

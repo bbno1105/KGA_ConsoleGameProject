@@ -5,6 +5,7 @@ typedef struct Text
 	struct TTF_Font*	Font;
 	wchar_t*			String;
 	int32				Length;
+	void* Data;
 } Text;
 
 typedef enum FontStyle
