@@ -316,6 +316,22 @@ void update_title(void)
 {
     TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
+    static float fadeTime;
+    if (data->ID == data->PlayerReturnPoint && data->isPlayerReturn)
+    {
+        fadeTime += Timer_GetDeltaTime();
+        // 페이드 아웃 시작 (2.55초)
+        if (fadeTime > 3)
+        {
+            data->PlayerDieCount++;
+            // 페이드 인 시작 (2.55초)
+            fadeTime = 0;
+            LogInfo("회귀중...."); // << 잘 들어오네~
+            data->isPlayerReturn = false;
+        }
+        return;
+    }
+
     bool RefreshScene = false;
 
     // 델타타임 적용
@@ -363,7 +379,7 @@ void update_title(void)
     }
 
     // 다음페이지 넘김 or 텍스트 스킵
-    if (Input_GetKeyDown(VK_SPACE) && data->isPlayerReturn == false)
+    if (Input_GetKeyDown(VK_SPACE))
     {
         if (data->isEscapeActive) // 선택지 선택
         {
@@ -398,6 +414,11 @@ void update_title(void)
 
                 data->ID = data->SelectMovingPage[data->SelectId];         
                 
+                if (data->ID == data->PlayerReturnPoint)
+                {
+                    data->isPlayerReturn = true;
+                }
+
                 RefreshScene = true;
             }
         }
@@ -431,16 +452,6 @@ void update_title(void)
         }
     }
 
-    // 다음 씬 = 플레이어 저장 회귀씬이라면
-    // 
-    // n초 동안 델타 돌아감----
-    // 페이드 아웃 시작 (n초)
-    // 플레이어 죽은 횟수 카운트 증가
-    // 페이드 아웃 종료
-    // ---- n초 종료
-    // 페이드 인 시작 (n초)
-    //
-    // 다음 진행
 
 
     // 다음 씬 정보 가져오기위해 초기화도 시켜주는곳
@@ -519,7 +530,6 @@ void update_title(void)
         }
     }
 }
-
 
 void render_title(void)
 {
