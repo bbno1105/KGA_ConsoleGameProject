@@ -35,6 +35,8 @@ typedef struct Start_Data
 	Text        Title_Hyacinth;
 	Text        StartMenu[3];
 
+	Music		MainBGM;
+
 } Start_Data;
 
 void init_start(void)
@@ -52,7 +54,6 @@ void init_start(void)
 		Text_CreateText(&data->StartMenu[i], "HeirofLightBold.ttf", 30, str1[i], wcslen(str1[i]));
 	}
 
-
 	//이미지 로드
 	Image_LoadImage(&data->Start_BackGround_Image, "Background.jpg");
 	Image_LoadImage(&data->Start_Front_Image, "Main1.png");
@@ -63,6 +64,10 @@ void init_start(void)
 	data->Start_Icon_Y = 710;
 	data->Alpha = 255;
 
+	// 사운드
+	Audio_LoadMusic(&data->MainBGM, "ID_1_Bgm.wav"); // 비쥐엠
+	Audio_Play(&data->MainBGM, INFINITY_LOOP);
+	Audio_SetVolume(1.0f);
 }
 
 void update_start(void)
@@ -146,6 +151,8 @@ void release_start(void)
 		Text_FreeText(&data->StartMenu[i]);
 	}
 
+	Audio_FreeMusic(&data->MainBGM);
+
 	SafeFree(g_Scene.Data);
 }
 
@@ -161,7 +168,6 @@ typedef struct TitleSceneData
 	int32   ID;
 	int32   PlayerDieCount;
 	bool    isPlayerReturn;
-	int32   PlayerReturnPoint;
 	Text    PlayerReturnCountText;
 
 	// 메뉴
@@ -233,6 +239,11 @@ typedef struct TitleSceneData
 
 } TitleSceneData;
 
+int returnPoint2[] = { 4, 7, 9, 12, 14, 18, 21, 27, 33, 38, 42, 45 };
+int returnPoint73[] = { 64, 72, 78, 80 };
+int returnPoint92[] = { 88, 91, 97, 99, 129 };
+int returnPoint128 = 1;
+
 void init_title(void)
 {
 	// [ 공통 ]
@@ -242,7 +253,7 @@ void init_title(void)
 
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	data->ID = 1;               // ID 1부터 시작
+	data->ID = 122;               // ID 1부터 시작
 
 	data->isPlayerReturn = false; // 회귀중이냐
 	
@@ -356,14 +367,57 @@ void update_title(void)
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
 	// [ 페이드 인/아웃 ]
-	static float fadeTime; // 페이드 시간
 	static float FadeInOutElapsedTime; // 화면
 	static float EyesElapsedTime; // 눈
 
 	FadeInOutElapsedTime += Timer_GetDeltaTime();
 	EyesElapsedTime += Timer_GetDeltaTime();
 
-	if (data->ID == data->PlayerReturnPoint && data->isPlayerReturn)
+	// [ 엔딩 크레딧으로 가기전 연출 ]
+	static bool isEnding = false;
+	static float endingTime;
+	if (isEnding)
+	{
+		endingTime += Timer_GetDeltaTime();
+
+		data->isFade = true;
+
+		if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool)
+		{
+			data->FadeInOut_Alpha += 4;
+			if (data->FadeInOut_Alpha >= 255)
+			{
+				data->FadeInOut_Alpha = 255;
+				data->FadeInOut_Alpha_bool = false;
+			}
+			FadeInOutElapsedTime = 0.0f;
+		}
+		if (EyesElapsedTime >= 0.01f && data->EyesImage_bool)
+		{
+			data->EyesImage_Up_Y += 10;
+			data->EyesImage_Down_Y -= 10;
+			if (data->EyesImage_Down_Y <= 380)
+			{
+				data->EyesImage_Up_Y = 0;
+				data->EyesImage_Down_Y = 380;
+				data->EyesImage_bool = false;
+			}
+			EyesElapsedTime = 0.0f;
+		}
+
+		if (endingTime > 3 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
+		{
+			endingTime = 0;
+			data->isPlayerReturn = false;
+			Scene_SetNextScene(SCENE_ENDING_CREDITS);
+		}
+		return;
+	}
+
+	// [ 회귀 ]
+	static float fadeTime; // 페이드 시간
+	
+	if (data->isPlayerReturn)
 	{
 		fadeTime += Timer_GetDeltaTime();
 
@@ -481,7 +535,7 @@ void update_title(void)
 	}
 
 	// 카운트다운 시작
-	if (data->TextLine >= data->TotalLine && data->ID == 2) // 123씬에만 쓰임 (핟으)
+	if (data->TextLine >= data->TotalLine && data->ID == 123) // 123씬에만 쓰임 (핟으)
 	{
 		data->isLoading = true;
 
@@ -492,10 +546,10 @@ void update_title(void)
 		{
 			data->isLoading = false;
 
-			data->ID = 2;
+			//data->ID = 2; // 테스트용 2번으로 보내는거
 
-			//data->ID = data->SelectMovingPage[2]; // 선택지 자동 선택
-			//data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
+			data->ID = data->SelectMovingPage[2]; // 3번 선택지 자동 선택
+			data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
 
 			RefreshScene = true;
 		}
@@ -539,11 +593,56 @@ void update_title(void)
 				data->isLoading = false; // 로딩바 삭제
 				data->isSkip = false;
 
+				// 여기서 회귀장소 하드코딩 해버리자
+				switch (data->SelectMovingPage[data->SelectId])
+				{
+				case 2 :
+					for (int i = 0; i < sizeof(returnPoint2); i++)
+					{
+						if (data->ID == returnPoint2[i])
+						{
+							data->isPlayerReturn = true;
+						}
+					}
+					break;
+
+				case 73:
+					for (int i = 0; i < sizeof(returnPoint73); i++)
+					{
+						if (data->ID == returnPoint73[i])
+						{
+							data->isPlayerReturn = true;
+						}
+					}
+					break;
+
+				case 92:
+					for (int i = 0; i < sizeof(returnPoint92); i++)
+					{
+						if (data->ID == returnPoint92[i])
+						{
+							data->isPlayerReturn = true;
+						}
+					}
+					break;
+
+				case 125:
+						if (data->ID == returnPoint128)
+						{
+							data->isPlayerReturn = true;
+						}
+					break;
+
+				default:
+					break;
+				}
+				
 				data->ID = data->SelectMovingPage[data->SelectId];
 
-				if (data->ID == data->PlayerReturnPoint)
+				if (data->ID == 0)
 				{
-					data->isPlayerReturn = true;
+					isEnding = true;
+					return;
 				}
 
 				RefreshScene = true;
@@ -582,11 +681,6 @@ void update_title(void)
 	// 다음 씬 정보 가져오기위해 초기화도 시켜주는곳
 	if (RefreshScene)
 	{
-		if (data->ID == 2) // 회귀시점 저장 (핟으콛잉)
-		{
-			data->PlayerReturnPoint = 2;
-		}
-
 		data->TextLine = 0; // 텍스트줄 0초기화
 		data->TotalLine = 0; // 총 몇줄인지 체크
 		data->CountTime = LOADINGTIME;
@@ -791,7 +885,7 @@ void render_title(void)
 	// [ 플레이어 데이터 ]
 	{
 		SDL_Color color = { .r = 100, .g = 85, .b = 70, .a = 255 };
-		Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1550, 150, color);
+		Renderer_DrawTextBlended(&data->PlayerReturnCountText, 1560, 150, color);
 	}
 
 	// [ 선택지 ]
@@ -985,6 +1079,8 @@ typedef struct Ending_Credits_Data
 	int32		Alpha;
 	Image		Ending_Credits_BackGround_Image;
 	Image		Ending_Credits_Front_Image;
+
+	Music		CreditsBGM;
 }Ending_Credits_Data;
 
 void init_credits(void)
@@ -1008,6 +1104,10 @@ void init_credits(void)
 	data->Ending_Credits_Text_Y = 1000;
 	data->Alpha = 225;
 
+	// 사운드
+	Audio_LoadMusic(&data->CreditsBGM, "ID_1_Bgm.wav"); // 비쥐엠
+	Audio_Play(&data->CreditsBGM, INFINITY_LOOP);
+	Audio_SetVolume(1.0f);
 }
 
 void update_credits(void)
@@ -1067,305 +1167,11 @@ void release_credits(void)
 		Text_FreeText(&data->Ending_Credits_Text[i]);
 	}
 
-	SafeFree(g_Scene.Data);
-}
-#pragma endregion
-
-
-#pragma region 참고용
-
-// #################################################### 참고용 데이터 ####################################################
-/*
-#pragma region MainScene
-#define GUIDELINE_COUNT 8
-
-
-typedef struct MainSceneData
-{
-	Text      GuideLine[GUIDELINE_COUNT];
-	Music      BGM;
-	float      Volume;
-	SoundEffect Effect;
-	Image      Front;
-	Image      BackGround;
-	float      Speed;
-	int32      X;
-	int32      Y;
-	int32      Alpha;
-} MainSceneData;
-
-void logOnFinished(void)
-{
-	LogInfo("You can show this log on stopped the music");
-}
-
-void log2OnFinished(int32 channel)
-{
-	LogInfo("You can show this log on stopped the effect");
-}
-
-void init_main(void)
-{
-	g_Scene.Data = malloc(sizeof(MainSceneData));
-	memset(g_Scene.Data, 0, sizeof(MainSceneData));
-
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
-
-	Image_LoadImage(&data->Front, "main.png");
-
-	Audio_LoadMusic(&data->BGM, "powerful.mp3");
-	Audio_HookMusicFinished(logOnFinished);
-	Audio_LoadSoundEffect(&data->Effect, "effect2.wav");
-	Audio_HookSoundEffectFinished(log2OnFinished);
-	Audio_PlayFadeIn(&data->BGM, INFINITY_LOOP, 3000);
-
-	data->Volume = 1.0f;
-
-	data->Speed = 400.0f;
-	data->X = 400;
-	data->Y = 400;
-	data->Alpha = 255;
-}
-
-void update_main(void)
-{
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
-
-	if (Input_GetKeyDown('E'))
-	{
-		Audio_PlaySoundEffect(&data->Effect, 1);
-	}
-
-	if (Input_GetKeyDown('M'))
-	{
-		if (Audio_IsMusicPlaying())
-		{
-			Audio_Stop();
-		}
-		else
-		{
-			Audio_Play(&data->BGM, INFINITY_LOOP);
-		}
-	}
-
-	if (Input_GetKeyDown('P'))
-	{
-		if (Audio_IsMusicPaused())
-		{
-			Audio_Resume();
-		}
-		else
-		{
-			Audio_Pause();
-		}
-	}
-
-	if (Input_GetKey('1'))
-	{
-		data->Volume -= 0.01f;
-		Audio_SetVolume(data->Volume);
-	}
-
-	if (Input_GetKey('2'))
-	{
-		data->Volume += 0.01f;
-		Audio_SetVolume(data->Volume);
-	}
-
-	if (Input_GetKey(VK_DOWN))
-	{
-		data->Y += data->Speed * Timer_GetDeltaTime();
-	}
-
-	if (Input_GetKey(VK_UP))
-	{
-		data->Y -= data->Speed * Timer_GetDeltaTime();
-	}
-
-	if (Input_GetKey(VK_LEFT))
-	{
-		data->X -= data->Speed * Timer_GetDeltaTime();
-	}
-
-	if (Input_GetKey(VK_RIGHT))
-	{
-		data->X += data->Speed * Timer_GetDeltaTime();
-	}
-
-	if (Input_GetKey('W'))
-	{
-		data->BackGround.ScaleY -= 0.05f;
-	}
-
-	if (Input_GetKey('S'))
-	{
-		data->BackGround.ScaleY += 0.05f;
-	}
-
-	if (Input_GetKey('A'))
-	{
-		data->BackGround.ScaleX -= 0.05f;
-	}
-
-	if (Input_GetKey('D'))
-	{
-		data->BackGround.ScaleX += 0.05f;
-	}
-
-	if (Input_GetKey('K'))
-	{
-		data->Alpha = Clamp(0, data->Alpha - 1, 255);
-		Image_SetAlphaValue(&data->BackGround, data->Alpha);
-	}
-
-	if (Input_GetKey('L'))
-	{
-		data->Alpha = Clamp(0, data->Alpha + 1, 255);
-		Image_SetAlphaValue(&data->BackGround, data->Alpha);
-	}
-
-}
-
-void render_main(void)
-{
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
-
-	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-	{
-		SDL_Color color = { .a = 255 };
-		Renderer_DrawTextBlended(&data->GuideLine[i], 100, 400 + 25 * i, color);
-	}
-
-	Renderer_DrawImage(&data->Front, 0, 0);
-	Renderer_DrawImage(&data->BackGround, data->X, data->Y);
-}
-
-void release_main(void)
-{
-	MainSceneData* data = (MainSceneData*)g_Scene.Data;
-
-	for (int32 i = 0; i < GUIDELINE_COUNT; ++i)
-	{
-		Text_FreeText(&data->GuideLine[i]);
-	}
-	Audio_FreeMusic(&data->BGM);
-	Audio_FreeSoundEffect(&data->Effect);
+	Audio_FreeMusic(&data->CreditsBGM);
 
 	SafeFree(g_Scene.Data);
 }
 #pragma endregion
-
-//#pragma region ImageScene1
-//
-//const wchar_t* str3[] = {
-//   L"GAME START"
-//};
-//
-//typedef struct Scene1_Data
-//{
-//    Image      Scene1_BackGround;
-//    float      Speed;
-//    int32      X;
-//    int32      Y;
-//    int32      Alpha;
-//    Text   GuideLine[10];
-//    Text   TestText;
-//    int32   FontSize;
-//    int32   RenderMode;
-//    int32      NextText;
-//    int32      check;
-//
-//} Scene1_Data;
-//
-//void init_scene_1(void)
-//{
-//    g_Scene.Data = malloc(sizeof(Scene1_Data));
-//    memset(g_Scene.Data, 0, sizeof(Scene1_Data));
-//
-//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
-//
-//    Image_LoadImage(&data->Scene1_BackGround, "Background.png");
-//    (data->Scene1_BackGround.ScaleX = 10);
-//    (data->Scene1_BackGround.ScaleY = 10);
-//
-//    data->Speed = 400.0f;
-//    data->X = 0;
-//    data->Y = 0;
-//    data->Alpha = 100;
-//
-//
-//    data->FontSize = 50;
-//    Text_CreateText(&data->TestText, "HeirofLightBold.ttf", data->FontSize, Data[GetCsvData(1)].Text, lstrlen(Data[GetCsvData(1)].Text));
-//
-//    data->RenderMode = SOLID;
-//
-//    data->NextText = false;
-//    data->check = 0;
-//}
-//
-//void update_scene_1(void)
-//{
-//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
-//
-//    // 나중에 타자치듯이 하나씩 출력될 예정
-//
-//}
-//
-//void render_scene_1(void)
-//{
-//
-//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
-//
-//
-//    Image_SetAlphaValue(&data->Scene1_BackGround, data->Alpha);
-//    Renderer_DrawImage(&data->Scene1_BackGround, 0, 0);
-//
-//    for (int32 i = 0; i < 10; ++i)
-//    {
-//        SDL_Color color = { .a = 255 };
-//        Renderer_DrawTextBlended(&data->GuideLine[i], 400, 200 * i, color);
-//    }
-//
-//    switch (data->RenderMode)
-//    {
-//    case SOLID:
-//    {
-//        SDL_Color color = { .a = 255 };
-//        Renderer_DrawTextBlended(&data->TestText, 400, 400, color);
-//    }
-//    break;
-//    case SHADED:
-//    {
-//        SDL_Color bg = { .a = 255 };
-//        SDL_Color fg = { .r = 255, .g = 255, .a = 255 };
-//        Renderer_DrawTextShaded(&data->TestText, 400, 400, fg, bg);
-//    }
-//    break;
-//    }
-//
-//
-//}
-//
-//void release_scene_1(void)
-//{
-//    Scene1_Data* data = (Scene1_Data*)g_Scene.Data;
-//
-//    for (int32 i = 0; i < 10; ++i)
-//    {
-//        Text_FreeText(&data->GuideLine[i]);
-//    }
-//    Text_FreeText(&data->TestText);
-//
-//    SafeFree(g_Scene.Data);
-//
-//}
-//
-//#pragma endregion
-*/
-// ###################################################################################################################
-
-#pragma endregion
-
 
 bool Scene_IsSetNextScene(void)
 {
