@@ -371,7 +371,7 @@ void update_title(void)
 
 		if (FadeInOutElapsedTime >= 0.01f && data->FadeInOut_Alpha_bool)
 		{
-			data->FadeInOut_Alpha += 2;
+			data->FadeInOut_Alpha += 4;
 			if (data->FadeInOut_Alpha >= 255)
 			{
 				data->FadeInOut_Alpha = 255;
@@ -381,8 +381,8 @@ void update_title(void)
 		}
 		if (EyesElapsedTime >= 0.01f && data->EyesImage_bool)
 		{
-			data->EyesImage_Up_Y += 5;
-			data->EyesImage_Down_Y -= 5;
+			data->EyesImage_Up_Y += 10;
+			data->EyesImage_Down_Y -= 10;
 			if (data->EyesImage_Down_Y <= 380)
 			{
 				data->EyesImage_Up_Y = 0;
@@ -392,7 +392,7 @@ void update_title(void)
 			EyesElapsedTime = 0.0f;
 		}
 		
-		if (fadeTime > 3 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
+		if (fadeTime > 1 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
 		{
 			data->PlayerDieCount++;
 			// 페이드 인 시작 (2.55초)
@@ -404,7 +404,7 @@ void update_title(void)
 
 	if (FadeInOutElapsedTime >= 0.01f && !data->FadeInOut_Alpha_bool)
 	{
-		data->FadeInOut_Alpha -= 2;
+		data->FadeInOut_Alpha -= 4;
 		if (data->FadeInOut_Alpha <= 0)
 		{
 			data->FadeInOut_Alpha = 0;
@@ -414,8 +414,8 @@ void update_title(void)
 	}
 	if (EyesElapsedTime >= 0.01f && !data->EyesImage_bool)
 	{
-		data->EyesImage_Up_Y -= 4;
-		data->EyesImage_Down_Y += 4;
+		data->EyesImage_Up_Y -= 10;
+		data->EyesImage_Down_Y += 10;
 
 		if (data->EyesImage_Down_Y >= 1080)
 		{
@@ -827,7 +827,12 @@ void render_title(void)
 	// 시간이 흐르면
 	if (data->isBGM)
 	{
-		if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+		if (!strcmp(L"", ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
+		{
+			strcpy(data->NowBGM, L"");
+			Audio_Stop();
+		}
+		else if (strcmp(&data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM])))
 		{
 			strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
 			Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
