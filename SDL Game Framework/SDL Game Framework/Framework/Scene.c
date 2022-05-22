@@ -253,7 +253,7 @@ void init_title(void)
 
 	TitleSceneData* data = (TitleSceneData*)g_Scene.Data;
 
-	data->ID = 122;               // ID 1부터 시작
+	data->ID = 1;               // ID 1부터 시작
 
 	data->isPlayerReturn = false; // 회귀중이냐
 	
@@ -597,7 +597,7 @@ void update_title(void)
 				switch (data->SelectMovingPage[data->SelectId])
 				{
 				case 2 :
-					for (int i = 0; i < sizeof(returnPoint2); i++)
+					for (int i = 0; i < (sizeof(returnPoint2) / sizeof(int)); i++)
 					{
 						if (data->ID == returnPoint2[i])
 						{
@@ -607,7 +607,7 @@ void update_title(void)
 					break;
 
 				case 73:
-					for (int i = 0; i < sizeof(returnPoint73); i++)
+					for (int i = 0; i < (sizeof(returnPoint73) / sizeof(int)); i++)
 					{
 						if (data->ID == returnPoint73[i])
 						{
@@ -617,7 +617,7 @@ void update_title(void)
 					break;
 
 				case 92:
-					for (int i = 0; i < sizeof(returnPoint92); i++)
+					for (int i = 0; i < (sizeof(returnPoint92) / sizeof(int)); i++)
 					{
 						if (data->ID == returnPoint92[i])
 						{
