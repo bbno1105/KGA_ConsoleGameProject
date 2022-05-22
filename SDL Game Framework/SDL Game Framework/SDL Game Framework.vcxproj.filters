@@ -85,5 +85,19 @@
     <ClInclude Include="Framework\csv.h">
       <Filter>Framework</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SDL Game Framework1.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Goodmoring.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="GoodMoring.png">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>

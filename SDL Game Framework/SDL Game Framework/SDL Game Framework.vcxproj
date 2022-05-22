@@ -186,8 +186,16 @@ xcopy "$(ProjectDir)Asset\*.*" "$(TargetDir)Asset\" /E /Y</Command>
     <ClInclude Include="Framework\Timer.h" />
     <ClInclude Include="Framework\Window.h" />
     <ClInclude Include="Macro.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Type.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SDL Game Framework1.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Goodmoring.ico" />
+    <Image Include="GoodMoring.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
