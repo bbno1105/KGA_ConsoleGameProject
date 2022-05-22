@@ -2,7 +2,7 @@
 #include "Scene.h"
 
 #include "Framework.h"
-
+//asdf
 Scene g_Scene;
 
 static ESceneType s_nextScene = SCENE_NULL;
