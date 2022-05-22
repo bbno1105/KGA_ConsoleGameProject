@@ -2,10 +2,8 @@
 #include "Scene.h"
 
 #include "Framework.h"
-<<<<<<< Updated upstream
 
-=======
-//asdfasdf
+//asdfasdfasdf
 >>>>>>> Stashed changes
 Scene g_Scene;
 
