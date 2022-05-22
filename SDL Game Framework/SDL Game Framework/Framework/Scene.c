@@ -65,7 +65,7 @@ void init_start(void)
 	data->Alpha = 255;
 
 	// 사운드
-	Audio_LoadMusic(&data->MainBGM, "ID_1_Bgm.wav"); // 비쥐엠
+	Audio_LoadMusic(&data->MainBGM, "ID_0_Main.wav"); // 비쥐엠
 	Audio_Play(&data->MainBGM, INFINITY_LOOP);
 	Audio_SetVolume(1.0f);
 }
@@ -242,7 +242,7 @@ typedef struct TitleSceneData
 int returnPoint2[] = { 4, 7, 9, 12, 14, 18, 21, 27, 33, 38, 42, 45 };
 int returnPoint73[] = { 64, 72, 78, 80 };
 int returnPoint92[] = { 88, 91, 97, 99, 129 };
-int returnPoint128 = 1;
+int returnPoint128 = 125;
 
 void init_title(void)
 {
@@ -408,6 +408,7 @@ void update_title(void)
 		if (endingTime > 3 && !data->EyesImage_bool && !data->FadeInOut_Alpha_bool)
 		{
 			endingTime = 0;
+			isEnding = false;
 			data->isPlayerReturn = false;
 			Scene_SetNextScene(SCENE_ENDING_CREDITS);
 		}
@@ -548,8 +549,8 @@ void update_title(void)
 
 			//data->ID = 2; // 테스트용 2번으로 보내는거
 
-			data->ID = data->SelectMovingPage[2]; // 3번 선택지 자동 선택
-			data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
+			data->ID = 126; // 3번 선택지 자동 선택
+			//data->MovingPageSelected[data->ID][2] = true; // 자동 선택된 선택지 저장
 
 			RefreshScene = true;
 		}
@@ -626,7 +627,7 @@ void update_title(void)
 					}
 					break;
 
-				case 125:
+				case 128:
 						if (data->ID == returnPoint128)
 						{
 							data->isPlayerReturn = true;
@@ -1105,7 +1106,7 @@ void init_credits(void)
 	data->Alpha = 225;
 
 	// 사운드
-	Audio_LoadMusic(&data->CreditsBGM, "ID_1_Bgm.wav"); // 비쥐엠
+	Audio_LoadMusic(&data->CreditsBGM, "Ending_Credit.wav"); // 비쥐엠
 	Audio_Play(&data->CreditsBGM, INFINITY_LOOP);
 	Audio_SetVolume(1.0f);
 }
