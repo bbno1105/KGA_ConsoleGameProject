@@ -19,7 +19,7 @@ bool Window_Init(void)
 
 	return true;
 }
-
+/asdf
 void Window_Cleanup(void)
 {
 	SDL_DestroyWindow(g_App.Window);
