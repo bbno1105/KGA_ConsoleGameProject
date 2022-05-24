@@ -4,6 +4,10 @@
 #include "Framework.h"
 
 Scene g_Scene;
+bool    MovingPageSelected[200][3];
+
+float g_BGM_vol = 1.0f;
+float g_SE_vol = 1.0f;
 
 static ESceneType s_nextScene = SCENE_NULL;
 
@@ -15,7 +19,7 @@ static ESceneType s_nextScene = SCENE_NULL;
 
 
 const wchar_t* str1[] = {
-	L"▶게임시작",
+	L"▶게임시작", 
 	L"▶조작방법",
 	L"▶게임종료"
 };
@@ -35,7 +39,17 @@ typedef struct Start_Data
 	Text        Title_Hyacinth;
 	Text        StartMenu[3];
 
+	Text        BGM_Vol_Text;
 	Music		MainBGM;
+	float		BGM_Vol;
+	Image		BGM_Vol_Bar1;
+	Image		BGM_Vol_Bar2;
+
+	Text        SE_Vol_Text;
+	SoundEffect   MainSE;
+	float		SE_Vol;
+	Image		SE_Vol_Bar1;
+	Image		SE_Vol_Bar2;
 
 } Start_Data;
 
@@ -65,9 +79,20 @@ void init_start(void)
 	data->Alpha = 255;
 
 	// 사운드
+	data->BGM_Vol = g_BGM_vol;
+	data->SE_Vol = g_SE_vol;
+
 	Audio_LoadMusic(&data->MainBGM, "ID_0_Main.wav"); // 비쥐엠
 	Audio_Play(&data->MainBGM, INFINITY_LOOP);
-	Audio_SetVolume(1.0f);
+	Audio_SetVolume(data->BGM_Vol);
+
+	Audio_LoadSoundEffect(&data->MainSE, "SelectSE.wav"); // 선택음 파일 넣어야함
+	Audio_SetEffectVolume(&data->MainSE, data->SE_Vol);
+
+	Image_LoadImage(&data->BGM_Vol_Bar1, "LoadingBarFrame.png");
+	Image_LoadImage(&data->BGM_Vol_Bar2, "LoadingBar.png");
+	Image_LoadImage(&data->SE_Vol_Bar1, "LoadingBarFrame.png");
+	Image_LoadImage(&data->SE_Vol_Bar2, "LoadingBar.png");
 }
 
 void update_start(void)
@@ -79,12 +104,16 @@ void update_start(void)
 	if (Input_GetKeyDown(VK_UP) && data->Start_Icon_Y > 710)
 	{
 		data->Start_Icon_Y -= 60;
+		Audio_PlaySoundEffect(&data->MainSE, 0);
 	}
+
 	if (Input_GetKeyDown(VK_DOWN) && data->Start_Icon_Y < 780)
 	{
 		data->Start_Icon_Y += 60;
+		Audio_PlaySoundEffect(&data->MainSE, 0);
 	}
-	if (Input_GetKeyDown(VK_SPACE))
+
+	if (Input_GetKeyDown('Z'))
 	{
 		if (data->Start_Icon_Y == 710)
 		{
@@ -92,6 +121,7 @@ void update_start(void)
 		}
 		else if (data->Start_Icon_Y == 770)
 		{
+			Audio_PlaySoundEffect(&data->MainSE, 0);
 			data->How_To_Operate_Open = !data->How_To_Operate_Open;
 		}
 		else
@@ -99,6 +129,59 @@ void update_start(void)
 			exit(0);
 		}
 	}
+
+	//BGM 조절
+	if (Input_GetKey('Q')) // 감소
+	{
+		if (0 < data->BGM_Vol)
+		{
+			data->BGM_Vol -= 0.01f;
+			Audio_SetVolume(data->BGM_Vol);
+			g_BGM_vol = data->BGM_Vol;
+		}
+	}
+	if (Input_GetKey('W')) // 증가
+	{
+		if (1 > data->BGM_Vol)
+		{
+			data->BGM_Vol += 0.01f;
+			Audio_SetVolume(data->BGM_Vol);
+			g_BGM_vol = data->BGM_Vol;
+		}
+	}
+	wchar_t BGM_TEXT[50] = L"";
+	wchar_t BGM_TEXT_Vol[10] = L"";
+	wcscat(BGM_TEXT, L"BGM (조절 Q/W) : ");
+	_itow((int)(data->BGM_Vol * 100), BGM_TEXT_Vol, 10);
+	wcscat(BGM_TEXT, BGM_TEXT_Vol);
+	Text_CreateText(&data->BGM_Vol_Text, "HeirofLightBold.ttf", 25, BGM_TEXT, wcslen(BGM_TEXT));
+
+
+	//SE 조절
+	if (Input_GetKey('A')) // 감소
+	{
+		if (0 < data->SE_Vol)
+		{
+			data->SE_Vol -= 0.01f;
+			Audio_SetEffectVolume(&data->MainSE, data->SE_Vol);
+			g_SE_vol = data->SE_Vol;
+		}
+	}
+	if (Input_GetKey('S')) // 증가
+	{
+		if (1 > data->SE_Vol)
+		{
+			data->SE_Vol += 0.01f;
+			Audio_SetEffectVolume(&data->MainSE, data->SE_Vol);
+			g_SE_vol = data->SE_Vol;
+		}
+	}
+	wchar_t SE_TEXT[50] = L"";
+	wchar_t SE_TEXT_Vol[10] = L"";
+	wcscat(SE_TEXT, L"SE (조절 A/S) : ");
+	_itow((int)(data->SE_Vol * 100), SE_TEXT_Vol, 10);
+	wcscat(SE_TEXT, SE_TEXT_Vol);
+	Text_CreateText(&data->SE_Vol_Text, "HeirofLightBold.ttf", 25, SE_TEXT, wcslen(SE_TEXT));
 }
 
 void render_start(void)
@@ -136,7 +219,23 @@ void render_start(void)
 	if (data->How_To_Operate_Open == true)
 	{
 		Renderer_DrawImage(&data->How_To_Operate, 0, 0);
-		Renderer_DrawImage(&data->Operate_Icon, 1195, 795);
+		Renderer_DrawImage(&data->Operate_Icon, 1160, 808);
+
+		SDL_Color color = { .r = 116, .g = 79, .b = 50, .a = 255 };
+		Renderer_DrawTextBlended(&data->BGM_Vol_Text, 470, 770, color);
+		data->BGM_Vol_Bar1.Width = 200;
+		data->BGM_Vol_Bar2.Width = 200;
+		data->BGM_Vol_Bar2.ScaleX = data->BGM_Vol / 1.0f;
+		Renderer_DrawImage(&data->BGM_Vol_Bar2, 780, 780);
+		Renderer_DrawImage(&data->BGM_Vol_Bar1, 780, 780);
+		
+		Renderer_DrawTextBlended(&data->SE_Vol_Text, 470, 810, color);
+		data->SE_Vol_Bar1.Width = 200;
+		data->SE_Vol_Bar2.Width = 200;
+		data->SE_Vol_Bar2.ScaleX = data->SE_Vol / 1.0f;
+		Renderer_DrawImage(&data->SE_Vol_Bar2, 780, 830);
+		Renderer_DrawImage(&data->SE_Vol_Bar1, 780, 830);
+
 	}
 
 }
@@ -145,6 +244,18 @@ void release_start(void)
 {
 	Start_Data* data = (Start_Data*)g_Scene.Data;
 	Text_FreeText(&data->Title_Hyacinth);
+	
+	Image_FreeImage(&data->Start_BackGround_Image);
+	Image_FreeImage(&data->Start_Front_Image);
+	Image_FreeImage(&data->How_To_Operate);
+	Image_FreeImage(&data->Icon);
+	Image_FreeImage(&data->Operate_Icon);
+
+	Image_FreeImage(&data->BGM_Vol_Bar1);
+	Image_FreeImage(&data->BGM_Vol_Bar2);
+	Image_FreeImage(&data->SE_Vol_Bar1);
+	Image_FreeImage(&data->SE_Vol_Bar2);
+
 
 	for (int32 i = 0; i < 3; ++i)
 	{
@@ -152,6 +263,7 @@ void release_start(void)
 	}
 
 	Audio_FreeMusic(&data->MainBGM);
+	Audio_FreeSoundEffect(&data->MainSE);
 
 	SafeFree(g_Scene.Data);
 }
@@ -202,7 +314,7 @@ typedef struct TitleSceneData
     Text    SelectText[3];       // [선택지3개][선택지글자개수]
     int32   SelectId;            // 씬 인덱스
     int32   SelectMovingPage[3]; // 씬 전환값
-    bool    MovingPageSelected[200][3];   // 선택지 선택여부를 위한 변수
+    // bool    MovingPageSelected[200][3];   // 선택지 선택여부를 위한 변수
     int32   selectIDCount;
 
 	// 이미지관련
@@ -231,11 +343,18 @@ typedef struct TitleSceneData
 	Music   BGM;
 	char    NowBGM[20];
 	float   BGM_Volume;
+	Text	BGM_Vol_Text;
+	Image		BGM_Vol_Bar1;
+	Image		BGM_Vol_Bar2;
+
 	bool    isSE;
-	SoundEffect   SE;
+	SoundEffect   TextSE;
 	float   SE_Volume;
 	float   SoundActiveTime;
-
+	SoundEffect   SelectSE;
+	Text	SE_Vol_Text;
+	Image		SE_Vol_Bar1;
+	Image		SE_Vol_Bar2;
 
 } TitleSceneData;
 
@@ -280,7 +399,7 @@ void init_title(void)
 	data->RenderMode = BLENDED;   // 랜더보드 : 글자만 나오게
 	data->TotalLine = 0;
 	data->isSkip = false;
-	memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
+	// memset(data->MovingPageSelected, false, sizeof(data->MovingPageSelected)); // 전부 false로 초기화
     data->TextEffect = 0;
 
 	// testtext에 Test_s 내용추가
@@ -316,24 +435,21 @@ void init_title(void)
 	strcpy(data->NowBGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
 	Audio_LoadMusic(&data->BGM, ParseToAscii(csvFile.Items[data->ID + 1][BGM]));
 	Audio_Play(&data->BGM, INFINITY_LOOP);
-	data->BGM_Volume = 1.0f;
+	data->BGM_Volume = g_BGM_vol;
 	data->SoundActiveTime = 0.0f;
 	Audio_SetVolume(data->BGM_Volume);
 	// SE
-	if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
-	{
-		Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
-		if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
-		{
-			Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
-		}
-		else
-		{
-			Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
-		}
-		data->SE_Volume = 1.0f;
-		Audio_SetEffectVolume(&data->SE, data->SE_Volume);
-	}
+	data->SE_Volume = g_SE_vol;
+	Audio_LoadSoundEffect(&data->TextSE, "SelectSE.wav");
+	Audio_SetEffectVolume(&data->TextSE, data->SE_Volume);
+
+	Audio_LoadSoundEffect(&data->SelectSE, "SelectSE.wav"); // 선택음 파일 넣어야함
+	Audio_SetEffectVolume(&data->SelectSE, data->SE_Volume);
+
+	Image_LoadImage(&data->BGM_Vol_Bar1, "LoadingBarFrame.png");
+	Image_LoadImage(&data->BGM_Vol_Bar2, "LoadingBar.png");
+	Image_LoadImage(&data->SE_Vol_Bar1, "LoadingBarFrame.png");
+	Image_LoadImage(&data->SE_Vol_Bar2, "LoadingBar.png");
 
 	// [ 이미지 ]
 	Image_LoadImage(&data->BackGroundImage, "Background.jpg");
@@ -526,12 +642,10 @@ void update_title(void)
 	// SE 출력을 위한 델타타임
 	data->SoundActiveTime += Timer_GetDeltaTime();
 
-	
-
-
 	// Esc 누르면 메뉴 띄우기
 	if (Input_GetKeyDown(VK_ESCAPE))
 	{
+		Audio_PlaySoundEffect(&data->SelectSE, 0);
 		data->isEscapeActive = !data->isEscapeActive;
 	}
 
@@ -556,8 +670,20 @@ void update_title(void)
 		}
 	}
 
-	// 다음페이지 넘김 or 텍스트 스킵
 	if (Input_GetKeyDown(VK_SPACE))
+	{
+		if (data->TextLine < data->TotalLine) // 스킵 기능
+		{
+			data->TextLine = data->TotalLine;
+			data->ImageActiveTime = 4;
+			data->SoundActiveTime = 4;
+			data->isSkip = true;
+			// 시간 델타타임도 올려줌
+		}
+	}
+
+	// 다음페이지 넘김 or 텍스트 스킵
+	if (Input_GetKeyDown('Z') && data->TextLine >= data->TotalLine)
 	{
 		if (data->isEscapeActive) // 선택지 선택
 		{
@@ -579,75 +705,64 @@ void update_title(void)
 		}
 		else
 		{
-			if (data->TextLine < data->TotalLine) // 스킵 기능
-			{
-				data->TextLine = data->TotalLine;
-				data->ImageActiveTime = 4;
-				data->SoundActiveTime = 4;
-				data->isSkip = true;
-				// 시간 델타타임도 올려줌
-			}
-			else // 진행 기능
-			{
-				data->MovingPageSelected[data->ID][data->SelectId] = true; // 선택한 선택지 저장
+			MovingPageSelected[data->ID][data->SelectId] = true; // 선택한 선택지 저장
 
-				data->isLoading = false; // 로딩바 삭제
-				data->isSkip = false;
+			data->isLoading = false; // 로딩바 삭제
+			data->isSkip = false;
 
-				// 여기서 회귀장소 하드코딩 해버리자
-				switch (data->SelectMovingPage[data->SelectId])
+			// 여기서 회귀장소 하드코딩 해버리자
+			switch (data->SelectMovingPage[data->SelectId])
+			{
+			case 2 :
+				for (int i = 0; i < (sizeof(returnPoint2) / sizeof(int)); i++)
 				{
-				case 2 :
-					for (int i = 0; i < (sizeof(returnPoint2) / sizeof(int)); i++)
+					if (data->ID == returnPoint2[i])
 					{
-						if (data->ID == returnPoint2[i])
-						{
-							data->isPlayerReturn = true;
-						}
+						data->isPlayerReturn = true;
 					}
-					break;
-
-				case 73:
-					for (int i = 0; i < (sizeof(returnPoint73) / sizeof(int)); i++)
-					{
-						if (data->ID == returnPoint73[i])
-						{
-							data->isPlayerReturn = true;
-						}
-					}
-					break;
-
-				case 92:
-					for (int i = 0; i < (sizeof(returnPoint92) / sizeof(int)); i++)
-					{
-						if (data->ID == returnPoint92[i])
-						{
-							data->isPlayerReturn = true;
-						}
-					}
-					break;
-
-				case 128:
-						if (data->ID == returnPoint128)
-						{
-							data->isPlayerReturn = true;
-						}
-					break;
-
-				default:
-					break;
 				}
+				break;
+
+			case 73:
+				for (int i = 0; i < (sizeof(returnPoint73) / sizeof(int)); i++)
+				{
+					if (data->ID == returnPoint73[i])
+					{
+						data->isPlayerReturn = true;
+					}
+				}
+				break;
+
+			case 92:
+				for (int i = 0; i < (sizeof(returnPoint92) / sizeof(int)); i++)
+				{
+					if (data->ID == returnPoint92[i])
+					{
+						data->isPlayerReturn = true;
+					}
+				}
+				break;
+
+			case 128:
+					if (data->ID == returnPoint128)
+					{
+						data->isPlayerReturn = true;
+					}
+				break;
+
+			default:
+				break;
+			}
 				
-				data->ID = data->SelectMovingPage[data->SelectId];
+			data->ID = data->SelectMovingPage[data->SelectId];
 
-				if (data->ID == 0)
-				{
-					isEnding = true;
-					return;
-				}
-
-				RefreshScene = true;
+			if (data->ID == 0)
+			{
+				isEnding = true;
+				return;
 			}
+
+			RefreshScene = true;
 		}
 	}
 
@@ -657,12 +772,16 @@ void update_title(void)
 		if (data->isEscapeActive && data->SelectMenuValue > 0)
 		{
 			data->SelectMenuValue--;
+			Audio_PlaySoundEffect(&data->SelectSE, 0);
+
 		}
-		else if (!data->isEscapeActive && data->SelectId > 0)
+		else if (!data->isEscapeActive && data->SelectId > 0 && data->TextLine >= data->TotalLine)
 		{
 			data->SelectId--;
 			LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
 			data->Icon_Y -= 40;
+			Audio_PlaySoundEffect(&data->SelectSE, 0);
+
 		}
 	}
 	if (Input_GetKeyDown(VK_DOWN))
@@ -670,14 +789,71 @@ void update_title(void)
 		if (data->isEscapeActive && data->SelectMenuValue < 2)
 		{
 			data->SelectMenuValue++;
+			Audio_PlaySoundEffect(&data->SelectSE, 0);
 		}
-		else if (!data->isEscapeActive && data->SelectId < data->selectIDCount)
+		else if (!data->isEscapeActive && data->SelectId < data->selectIDCount && data->TextLine >= data->TotalLine)
 		{
 			data->SelectId++;
 			LogInfo("SelectId : %d", data->SelectMovingPage[data->SelectId]);
 			data->Icon_Y += 40;
+			Audio_PlaySoundEffect(&data->SelectSE, 0);
 		}
 	}
+
+	//BGM 조절
+	if (Input_GetKey('Q')) // 감소
+	{
+		if (0 < data->BGM_Volume)
+		{
+			data->BGM_Volume -= 0.01f;
+			Audio_SetVolume(data->BGM_Volume);
+			g_BGM_vol = data->BGM_Volume;
+		}
+	}
+	if (Input_GetKey('W')) // 증가
+	{
+		if (1 > data->BGM_Volume)
+		{
+			data->BGM_Volume += 0.01f;
+			Audio_SetVolume(data->BGM_Volume);
+			g_BGM_vol = data->BGM_Volume;
+		}
+	}
+	wchar_t BGM_TEXT[50] = L"";
+	wchar_t BGM_TEXT_Vol[10] = L"";
+	wcscat(BGM_TEXT, L"BGM (조절 Q/W) : ");
+	_itow((int)(data->BGM_Volume * 100), BGM_TEXT_Vol, 10);
+	wcscat(BGM_TEXT, BGM_TEXT_Vol);
+	Text_CreateText(&data->BGM_Vol_Text, "HeirofLightBold.ttf", 25, BGM_TEXT, wcslen(BGM_TEXT));
+
+
+	//SE 조절
+	if (Input_GetKey('A')) // 감소
+	{
+		if (0 < data->SE_Volume)
+		{
+			data->SE_Volume -= 0.01f;
+			Audio_SetEffectVolume(&data->TextSE, data->SE_Volume);
+			Audio_SetEffectVolume(&data->SelectSE, data->SE_Volume);
+			g_SE_vol = data->SE_Volume;
+		}
+	}
+	if (Input_GetKey('S')) // 증가
+	{
+		if (1 > data->SE_Volume)
+		{
+			data->SE_Volume += 0.01f;
+			Audio_SetEffectVolume(&data->TextSE, data->SE_Volume);
+			Audio_SetEffectVolume(&data->SelectSE, data->SE_Volume);
+			g_SE_vol = data->SE_Volume;
+		}
+	}
+	wchar_t SE_TEXT[50] = L"";
+	wchar_t SE_TEXT_Vol[10] = L"";
+	wcscat(SE_TEXT, L"SE (조절 A/S) : ");
+	_itow((int)(data->SE_Volume * 100), SE_TEXT_Vol, 10);
+	wcscat(SE_TEXT, SE_TEXT_Vol);
+	Text_CreateText(&data->SE_Vol_Text, "HeirofLightBold.ttf", 25, SE_TEXT, wcslen(SE_TEXT));
 
 	// 다음 씬 정보 가져오기위해 초기화도 시켜주는곳
 	if (RefreshScene)
@@ -871,9 +1047,14 @@ void render_title(void)
 
             
         }
-        else if (data->ID > 2 && ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 && i + 1  == data->TotalLine)
+        else if (data->ID > 2 
+			&& (ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 2 
+			|| ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 73
+			|| ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 92
+			|| ParseToInt(csvFile.Items[data->ID + 1][MovingPage1_i]) == 128)
+			&& i + 1  == data->TotalLine)
         {
-            SDL_Color color = { .r = 255, .g = 0, .b = 0, .a = 255 };
+            SDL_Color color = { .r = 200, .g = 0, .b = 0, .a = 200 };
             Renderer_DrawTextBlended(&data->GuideLine[i], 200, 200 + 40 * i, color);
         }
         else 
@@ -899,7 +1080,7 @@ void render_title(void)
 		for (int i = 0; i < 3; i++)
 		{
 			// 이미 선택한 텍스트는 빨간색
-			if (data->MovingPageSelected[data->ID][i])
+			if (MovingPageSelected[data->ID][i])
 			{
 				SDL_Color color = { .r = 100, .g = 0, .b = 80, .a = 255 };
 				Renderer_DrawTextBlended(&data->SelectText[i], 200, selectText_Y[i], color);
@@ -942,14 +1123,15 @@ void render_title(void)
 		{
 			if (*ParseToAscii(csvFile.Items[data->ID + 1][SE]) != NULL)
 			{
-				Audio_LoadSoundEffect(&data->SE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+				Audio_LoadSoundEffect(&data->TextSE, ParseToAscii(csvFile.Items[data->ID + 1][SE]));
+				Audio_SetEffectVolume(&data->TextSE, data->SE_Volume);
 				if (ParseToInt(csvFile.Items[data->ID + 1][SE_loop]))
 				{
-					Audio_PlaySoundEffect(&data->SE, INFINITY_LOOP); // 1 : 무한루프
+					Audio_PlaySoundEffect(&data->TextSE, INFINITY_LOOP); // 1 : 무한루프
 				}
 				else
 				{
-					Audio_PlaySoundEffect(&data->SE, 0); // 0 : 1회 재생
+					Audio_PlaySoundEffect(&data->TextSE, 0); // 0 : 1회 재생
 				}
 			}
 			LogInfo("Now ID Loading... %d", data->ID);
@@ -984,6 +1166,21 @@ void render_title(void)
 		data->MenuIcon.Width = 30;
 		data->MenuIcon.Height = 30;
 		Renderer_DrawImage(&data->MenuIcon, 800, 505 + (data->SelectMenuValue * 90));
+
+		SDL_Color color = { .r = 116, .g = 79, .b = 50, .a = 255 };
+		Renderer_DrawTextBlended(&data->BGM_Vol_Text, 780, 770, color);
+		data->BGM_Vol_Bar1.Width = 100;
+		data->BGM_Vol_Bar2.Width = 100;
+		data->BGM_Vol_Bar2.ScaleX = data->BGM_Volume / 1.0f;
+		Renderer_DrawImage(&data->BGM_Vol_Bar2, 1060, 780);
+		Renderer_DrawImage(&data->BGM_Vol_Bar1, 1060, 780);
+
+		Renderer_DrawTextBlended(&data->SE_Vol_Text, 780, 810, color);
+		data->SE_Vol_Bar1.Width = 100;
+		data->SE_Vol_Bar2.Width = 100;
+		data->SE_Vol_Bar2.ScaleX = data->SE_Volume / 1.0f;
+		Renderer_DrawImage(&data->SE_Vol_Bar2, 1060, 830);
+		Renderer_DrawImage(&data->SE_Vol_Bar1, 1060, 830);
 	}
 
 	// 페이드 인/아웃 이미지, 눈 떴다/감았다 이미지 출력부분
@@ -1047,7 +1244,13 @@ void release_title(void)
 
 	// [ 사운드 ]
 	Audio_FreeMusic(&data->BGM);
-	Audio_FreeSoundEffect(&data->SE);
+	Audio_FreeSoundEffect(&data->TextSE);
+	Audio_FreeSoundEffect(&data->SelectSE);
+
+	Image_FreeImage(&data->BGM_Vol_Bar1);
+	Image_FreeImage(&data->BGM_Vol_Bar2);
+	Image_FreeImage(&data->SE_Vol_Bar1);
+	Image_FreeImage(&data->SE_Vol_Bar2);
 
 	SafeFree(g_Scene.Data);
 }
@@ -1082,6 +1285,7 @@ typedef struct Ending_Credits_Data
 	Image		Ending_Credits_Front_Image;
 
 	Music		CreditsBGM;
+
 }Ending_Credits_Data;
 
 void init_credits(void)
@@ -1115,6 +1319,15 @@ void update_credits(void)
 {
 	Ending_Credits_Data* data = (Ending_Credits_Data*)g_Scene.Data;
 
+	static float speed;
+
+	speed = 1.0f;
+
+	if (Input_GetKey(VK_SPACE))
+	{
+		speed = 6.0f;
+	}
+
 
 	// 크레딧 올리기
 	static float elapsedTime;
@@ -1124,13 +1337,13 @@ void update_credits(void)
 	{
 		if (elapsedTime >= 0.01f)
 		{
-			data->Ending_Credits_Text_Y = data->Ending_Credits_Text_Y - 1;
+			data->Ending_Credits_Text_Y = data->Ending_Credits_Text_Y - speed;
 
 			elapsedTime = 0.0f;
 		}
 	}
 
-	if (Input_GetKeyDown(VK_SPACE))
+	if (Input_GetKeyDown('Z'))
 	{
 		Scene_SetNextScene(SCENE_START);
 	}
